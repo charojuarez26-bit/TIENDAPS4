@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #080b12;
+    color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, .font-gaming {
+    font-family: 'Rajdhani', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: 0.025em;
+  }
+}
+
+/* Custom Scrollbar for gaming dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080b12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0070d1;
+}
+
+/* Glowing utilities */
+.glow-ps {
+  box-shadow: 0 0 20px rgba(0, 112, 209, 0.45);
+}
+
+.glow-ps:hover {
+  box-shadow: 0 0 30px rgba(0, 112, 209, 0.7), 0 0 15px rgba(0, 212, 255, 0.5);
+}
+
+.glow-neon {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.35);
+}
+
+.glow-neon:hover {
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.7);
+}
+
+.ps-card-gradient {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.95) 0%, rgba(13, 19, 31, 0.98) 100%);
+}
+
+.ps-hero-gradient {
+  background: radial-gradient(circle at 50% 0%, rgba(0, 112, 209, 0.18) 0%, rgba(8, 11, 18, 0) 70%);
+}
