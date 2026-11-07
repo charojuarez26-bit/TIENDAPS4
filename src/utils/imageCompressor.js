@@ -1,9 +1,9 @@
 /**
  * Compresses an image file using an off-screen HTML5 <canvas>
- * Resizes max width to 600px and exports as JPEG quality 0.7
+ * Resizes max width to 600px and exports as JPEG quality 0.75
  * Returns Promise<{ base64: string, originalSizeKb: number, compressedSizeKb: number, width: number, height: number }>
  */
-export function compressImageFile(file, maxWidth = 600, quality = 0.7) {
+export function compressImageFile(file, maxWidth = 600, quality = 0.75) {
   return new Promise((resolve, reject) => {
     if (!file || !file.type.startsWith('image/')) {
       return reject(new Error('El archivo no es una imagen válida.'));

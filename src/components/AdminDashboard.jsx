@@ -44,7 +44,8 @@ import {
   DollarSign,
   Copy,
   Sparkles,
-  Loader2
+  Loader2,
+  Camera
 } from 'lucide-react';
 import { PlayStationSymbolsRow } from './PlayStationSymbols';
 
@@ -115,6 +116,12 @@ export default function AdminDashboard({ onClose }) {
     featured: false
   });
   const fileInputRef = useRef(null);
+
+  // Quick edit states in list
+  const [editingPriceId, setEditingPriceId] = useState(null);
+  const [tempPriceValue, setTempPriceValue] = useState('');
+  const quickPhotoInputRef = useRef(null);
+  const [quickPhotoProductId, setQuickPhotoProductId] = useState(null);
 
   // Service form state
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -310,6 +317,44 @@ export default function AdminDashboard({ onClose }) {
       showToast('Error al procesar la imagen: ' + err.message, 'error');
     } finally {
       setIsCompressingImage(false);
+    }
+  };
+
+  // 1-Click Quick Price Edit
+  const handleStartEditPrice = (prod) => {
+    setEditingPriceId(prod.id);
+    setTempPriceValue(prod.price.toString());
+  };
+
+  const handleSaveQuickPrice = (prodId) => {
+    const val = Number(tempPriceValue);
+    if (!isNaN(val) && val > 0) {
+      updateProduct(prodId, { price: val });
+      showToast('Precio actualizado en 1 clic.', 'success');
+    }
+    setEditingPriceId(null);
+  };
+
+  // 1-Click Quick Photo Change from list
+  const handleTriggerQuickPhoto = (prodId) => {
+    setQuickPhotoProductId(prodId);
+    quickPhotoInputRef.current?.click();
+  };
+
+  const handleExecuteQuickPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !quickPhotoProductId) return;
+
+    try {
+      showToast('Comprimiendo y actualizando carátula...', 'info');
+      const result = await compressImageFile(file, 600, 0.75);
+      updateProduct(quickPhotoProductId, { image: result.base64 });
+      showToast(`Carátula actualizada (${result.compressedSizeKb} KB con Canvas).`, 'success');
+    } catch (err) {
+      showToast('Error al actualizar foto: ' + err.message, 'error');
+    } finally {
+      setQuickPhotoProductId(null);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -830,79 +875,189 @@ export default function AdminDashboard({ onClose }) {
               )}
             </div>
 
-            {/* Products Table/List */}
+            {/* Hidden Input for 1-Click Quick Photo Change */}
+            <input
+              type="file"
+              ref={quickPhotoInputRef}
+              accept="image/*"
+              onChange={handleExecuteQuickPhoto}
+              className="hidden"
+            />
+
+            {/* Products Table/List with 1-Click Quick Edits */}
             {catalogSubTab === 'products' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map((prod) => (
-                  <div
-                    key={prod.id}
-                    className="p-4 rounded-2xl bg-ps-surface border border-ps-border flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 mb-3 border border-slate-800">
-                        <img
-                          src={prod.image}
-                          alt={prod.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded bg-ps-bg/90 text-ps-neon border border-ps-neon/30 font-bold uppercase">
-                          {prod.tag || prod.category}
-                        </span>
-                      </div>
+                {products.map((prod) => {
+                  const isGame = prod.category === 'juegos_ps4' || prod.category === 'juegos_ps3';
+                  const isPS4Game = prod.category === 'juegos_ps4';
+                  const isEditingPrice = editingPriceId === prod.id;
 
-                      <h4 className="text-sm font-bold text-white line-clamp-1">
-                        {prod.name}
-                      </h4>
-                      <p className="text-xs text-slate-400 line-clamp-2 mt-1">
-                        {prod.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-ps-border/70 flex items-center justify-between">
+                  return (
+                    <div
+                      key={prod.id}
+                      className="p-4 rounded-2xl bg-ps-surface border border-ps-border flex flex-col justify-between hover:border-ps-neon/40 transition-all"
+                    >
                       <div>
-                        <div className="text-base font-bold font-gaming text-ps-neon">
-                          {formatARS(prod.price)}
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Stock: <strong className={prod.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}>{prod.stock}</strong>
-                        </div>
+                        {/* Thumbnail: If game, display physical box header */}
+                        {isGame ? (
+                          <div className="rounded-xl overflow-hidden border border-slate-700 bg-slate-950 mb-3 relative group">
+                            {/* Tape */}
+                            {isPS4Game ? (
+                              <div className="bg-[#0070d1] text-white px-2 py-0.5 flex items-center justify-between text-[11px] font-bold font-gaming">
+                                <span>PS4</span>
+                                <span className="text-[8px] opacity-80">Blu-ray</span>
+                              </div>
+                            ) : (
+                              <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-red-700 text-white px-2 py-0.5 flex items-center justify-between text-[11px] font-bold font-gaming border-b border-red-500/30">
+                                <span className="text-red-100">PS3</span>
+                                <span className="text-[8px] opacity-80 text-red-200">Blu-ray</span>
+                              </div>
+                            )}
+
+                            <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-900">
+                              <img
+                                src={prod.image}
+                                alt={prod.name}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-y-0 left-0 w-2.5 bg-gradient-to-r from-white/30 to-transparent pointer-events-none" />
+                              
+                              <span className="absolute top-1.5 left-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/90 text-ps-neon font-black border border-ps-neon/40">
+                                FÍSICO
+                              </span>
+
+                              {/* Yellow Price Badge */}
+                              <div className="absolute bottom-1 right-1">
+                                <span className="text-[11px] font-black px-1.5 py-0.5 rounded bg-[#facc15] text-black border border-black font-gaming">
+                                  {formatARS(prod.price)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 mb-3 border border-slate-800">
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded bg-ps-bg/90 text-ps-neon border border-ps-neon/30 font-bold uppercase">
+                              {prod.tag || prod.category}
+                            </span>
+                          </div>
+                        )}
+
+                        <h4 className="text-sm font-bold text-white line-clamp-1" title={prod.name}>
+                          {prod.name}
+                        </h4>
+                        <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">
+                          {prod.condition || prod.description || 'Garantizado en tienda'}
+                        </p>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => toggleProductStock(prod.id)}
-                          className={`px-2 py-1 rounded text-[10px] font-semibold border ${
-                            prod.stock > 0
-                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                              : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                          }`}
-                          title="Alternar stock rápido"
-                        >
-                          {prod.stock > 0 ? 'Pausar' : 'Activar'}
-                        </button>
-                        <button
-                          onClick={() => handleEditProduct(prod)}
-                          className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white"
-                          title="Editar"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`¿Eliminar ${prod.name}?`)) {
-                              deleteProduct(prod.id);
-                            }
-                          }}
-                          className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <div className="mt-3 pt-3 border-t border-ps-border/70 space-y-2.5">
+                        
+                        {/* 1-CLICK QUICK PRICE EDIT */}
+                        <div className="flex items-center justify-between">
+                          {isEditingPrice ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold text-ps-neon">$</span>
+                              <input
+                                type="number"
+                                value={tempPriceValue}
+                                onChange={(e) => setTempPriceValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveQuickPrice(prod.id);
+                                  if (e.key === 'Escape') setEditingPriceId(null);
+                                }}
+                                autoFocus
+                                className="w-24 px-1.5 py-0.5 rounded bg-slate-900 border border-ps-neon text-xs font-bold text-white font-mono focus:outline-none"
+                              />
+                              <button
+                                onClick={() => handleSaveQuickPrice(prod.id)}
+                                className="p-1 rounded bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                                title="Guardar nuevo precio"
+                              >
+                                <Check className="w-3 h-3 stroke-[3]" />
+                              </button>
+                              <button
+                                onClick={() => setEditingPriceId(null)}
+                                className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white"
+                                title="Cancelar"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <div className="text-sm font-bold font-gaming text-ps-neon">
+                                {formatARS(prod.price)}
+                              </div>
+                              <button
+                                onClick={() => handleStartEditPrice(prod)}
+                                className="p-1 rounded text-slate-500 hover:text-ps-neon hover:bg-slate-800 transition-colors"
+                                title="Editar precio en 1 clic"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="text-[10px] text-slate-400">
+                            Stock: <strong className={prod.stock > 0 ? 'text-emerald-400' : 'text-rose-400'}>{prod.stock}</strong>
+                          </div>
+                        </div>
+
+                        {/* QUICK ACTIONS ROW: Change photo in 1 click, Toggle stock, Edit, Delete */}
+                        <div className="flex items-center justify-between gap-1 pt-1 border-t border-slate-800/80">
+                          {/* 1-Click Change Photo */}
+                          <button
+                            onClick={() => handleTriggerQuickPhoto(prod.id)}
+                            className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 hover:border-ps-neon flex items-center gap-1 transition-all"
+                            title="Cambiar foto de carátula en 1 clic (Canvas máx 600px)"
+                          >
+                            <Camera className="w-3 h-3 text-ps-neon" />
+                            <span>Foto</span>
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => toggleProductStock(prod.id)}
+                              className={`px-2 py-1 rounded text-[10px] font-semibold border ${
+                                prod.stock > 0
+                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                              }`}
+                              title="Alternar stock rápido"
+                            >
+                              {prod.stock > 0 ? 'Pausar' : 'Activar'}
+                            </button>
+                            <button
+                              onClick={() => handleEditProduct(prod)}
+                              className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white"
+                              title="Editar completo"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`¿Eliminar ${prod.name}?`)) {
+                                  deleteProduct(prod.id);
+                                }
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400"
+                              title="Eliminar producto"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
                       </div>
+
                     </div>
-
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               /* Services List */
@@ -1274,254 +1429,211 @@ export default function AdminDashboard({ onClose }) {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: AGREGAR / EDITAR PRODUCTO CON CARGA REAL BASE64 */}
+      {/* MODAL: CARGADOR RÁPIDO DE JUEGOS Y PRODUCTOS (SIDE-BY-SIDE) */}
       {/* ========================================================= */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/85 backdrop-blur-sm"
             onClick={() => setIsProductModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-xl rounded-2xl bg-ps-surface border-2 border-ps-border shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-ps-border mb-4">
-              <h3 className="text-base font-bold text-white font-gaming tracking-wide flex items-center gap-2">
-                <Package className="w-5 h-5 text-ps-neon" />
-                <span>{editingProduct ? 'Editar Producto' : 'Crear Nuevo Producto en Catálogo'}</span>
-              </h3>
+          <div className="relative w-full max-w-4xl rounded-2xl bg-ps-surface border-2 border-ps-border shadow-2xl p-5 sm:p-7 max-h-[94vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-ps-border mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-white font-gaming tracking-wide flex items-center gap-2">
+                  <Package className="w-5 h-5 text-ps-neon" />
+                  <span>{editingProduct ? 'Editar Producto / Juego' : 'Cargador Rápido de Juegos & Catálogo'}</span>
+                  <PlayStationSymbolsRow size="w-3 h-3" spacing="space-x-1" />
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Completa los campos y previsualiza la caja física Blu-ray en vivo al costado antes de guardar.
+                </p>
+              </div>
+
               <button
                 onClick={() => setIsProductModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveProduct} className="space-y-4">
+            {/* SIDE-BY-SIDE GRID: FORM (LEFT) + LIVE PREVIEW (RIGHT) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
-              {/* Image Upload Box with Base64 & Preview */}
-              <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                <label className="block text-xs font-bold text-white mb-2 flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4 text-ps-neon" />
-                  <span>Imagen del Producto (Archivo local o URL)</span>
-                </label>
-
-                {/* Instant Preview with Automatic Physical Blu-ray Box Framing */}
-                {productForm.image && (
-                  <div className="mb-4 flex flex-col items-center">
-                    {productForm.category === 'juegos_ps4' || productForm.category === 'juegos_ps3' ? (
-                      /* SIMULATED PHYSICAL BLU-RAY BOX TEMPLATE */
-                      <div className="relative w-48 rounded-xl overflow-hidden border-2 bg-slate-950 shadow-2xl transition-all">
-                        {/* Tape Header */}
-                        {productForm.category === 'juegos_ps4' ? (
-                          <div className="bg-[#0070d1] text-white px-2 py-1 flex items-center justify-between text-xs font-bold font-gaming shadow-md">
-                            <span className="text-white font-extrabold tracking-wider">PS4</span>
-                            <span className="text-[8px] uppercase tracking-widest opacity-90 font-mono">Blu-ray Disc</span>
-                          </div>
-                        ) : (
-                          <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-red-700 text-white px-2 py-1 flex items-center justify-between text-xs font-bold font-gaming shadow-md border-b border-red-500/40">
-                            <span className="text-red-100 font-extrabold tracking-wider">PS3</span>
-                            <span className="text-[8px] uppercase tracking-widest text-red-200 font-mono">Blu-ray Disc</span>
-                          </div>
-                        )}
-
-                        {/* Cover Image in 3/4 ratio */}
-                        <div className="relative aspect-[3/4] w-full overflow-hidden bg-black">
-                          <img
-                            src={productForm.image}
-                            alt="Vista previa caja física"
-                            className="w-full h-full object-cover"
-                          />
-                          {/* Spine reflection sheen */}
-                          <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none z-10" />
-
-                          {/* Top Condition Tag */}
-                          <div className="absolute top-1.5 left-1.5 z-20">
-                            <span className="text-[8px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-900/90 text-ps-neon border border-ps-neon/50 shadow">
-                              {productForm.format || productForm.condition || 'Físico Original'}
-                            </span>
-                          </div>
-
-                          {/* Retail Price Splash */}
-                          {productForm.price && (
-                            <div className="absolute bottom-1 right-1 z-20">
-                              <div className="bg-[#ffe600] text-neutral-950 px-2 py-0.5 rounded font-gaming font-black text-xs shadow border border-black leading-tight">
-                                <div className="text-[7px] text-red-700 font-bold uppercase leading-none">OFERTA</div>
-                                {formatARS(productForm.price)}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Top-right remove photo button */}
-                        <button
-                          type="button"
-                          onClick={() => { setProductForm(prev => ({ ...prev, image: '' })); setCompressionDetails(null); }}
-                          className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-500 shadow z-30"
-                          title="Quitar foto"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-
-                        <div className="py-1 px-2 text-[10px] text-center font-bold text-slate-300 bg-slate-900 border-t border-slate-800">
-                          📦 Plantilla Caja Blu-ray {productForm.category === 'juegos_ps4' ? 'PS4' : 'PS3'}
-                        </div>
-                      </div>
-                    ) : (
-                      /* Standard wide console/accessory preview */
-                      <div className="relative aspect-video max-h-48 w-full rounded-xl overflow-hidden bg-black/60 border border-ps-neon/40 flex items-center justify-center">
-                        <img
-                          src={productForm.image}
-                          alt="Vista previa"
-                          className="w-full h-full object-contain"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => { setProductForm(prev => ({ ...prev, image: '' })); setCompressionDetails(null); }}
-                          className="absolute top-2 right-2 p-1 rounded-lg bg-rose-600 text-white hover:bg-rose-500 shadow-md"
-                          title="Quitar foto"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* File Upload (FileReader Base64 with Canvas Compression) */}
-                  <div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      onChange={handleImageFileUpload}
-                      className="hidden"
-                    />
+              {/* LEFT COLUMN: THE FORM */}
+              <form onSubmit={handleSaveProduct} className="lg:col-span-7 space-y-4">
+                
+                {/* 1. Consola / Categoría (Quick Selector) */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">
+                    1. Consola / Categoría *
+                  </label>
+                  
+                  {/* Quick Pills for Games */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <button
                       type="button"
-                      disabled={isCompressingImage}
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 px-3 rounded-xl bg-ps-blue/20 hover:bg-ps-blue/30 border border-ps-blue/50 text-ps-neon text-xs font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                      onClick={() => setProductForm(prev => ({ ...prev, category: 'juegos_ps4', tag: prev.tag || 'Físico Usado' }))}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        productForm.category === 'juegos_ps4'
+                          ? 'bg-[#0070d1] border-cyan-400 text-white shadow-ps-glow'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
                     >
-                      {isCompressingImage ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-ps-neon" />
-                          <span>Comprimiendo a 600px...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4" />
-                          <span>Cargar foto desde Celular o PC</span>
-                        </>
-                      )}
+                      <span>🎮 Juego PS4 (Físico)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setProductForm(prev => ({ ...prev, category: 'juegos_ps3', tag: prev.tag || 'Físico Usado' }))}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                        productForm.category === 'juegos_ps3'
+                          ? 'bg-gradient-to-r from-neutral-900 to-red-700 border-red-500 text-white shadow-md'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <span>🕹️ Juego PS3 (Físico)</span>
                     </button>
                   </div>
 
-                  {/* External URL alternative */}
-                  <div>
-                    <input
-                      type="url"
-                      placeholder="O pegar enlace web (Unsplash / Web)"
-                      value={productForm.image.startsWith('data:') ? '' : productForm.image}
-                      onChange={(e) => {
-                        setProductForm(prev => ({ ...prev, image: e.target.value }));
-                        setCompressionDetails(null);
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-ps-neon"
-                    />
-                  </div>
-                </div>
-
-                {/* Compression Success Badge */}
-                {compressionDetails && (
-                  <div className="mt-3 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-[11px] text-emerald-300 flex items-center justify-between animate-fadeIn">
-                    <div className="flex items-center gap-1.5 font-semibold">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>Optimización Canvas (Máx 600px • JPEG 0.7):</span>
-                    </div>
-                    <div className="font-mono text-xs">
-                      <span className="line-through text-slate-400 mr-1.5">{compressionDetails.originalSizeKb} KB</span>
-                      <strong className="text-emerald-400 font-bold">➔ {compressionDetails.compressedSizeKb} KB</strong>
-                    </div>
-                  </div>
-                )}
-                
-                <p className="text-[10px] text-slate-400 mt-2">
-                  🛡️ Compresión activa en Canvas: Las fotos se escalan a 600px con calidad JPEG 0.7 para optimizar el almacenamiento en localStorage.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Nombre del Producto *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: God of War Ragnarök (PS4)"
-                  value={productForm.name}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Categoría</label>
+                  {/* Dropdown for other categories */}
                   <select
                     value={productForm.category}
                     onChange={(e) => setProductForm(prev => ({ ...prev, category: e.target.value }))}
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon cursor-pointer"
                   >
-                    {CATEGORIES.map(c => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
-                    ))}
+                    <option value="juegos_ps4">🎮 Juegos PS4 (Físicos)</option>
+                    <option value="juegos_ps3">🕹️ Juegos PS3 (Físicos)</option>
+                    <option value="consolas_ps4">📺 Consolas PS4</option>
+                    <option value="consolas_ps3">🖥️ Consolas PS3</option>
+                    <option value="accesorios">🎧 Joysticks y Accesorios</option>
                   </select>
                 </div>
 
+                {/* 2. Nombre del Juego */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Precio (ARS) *</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="45000"
-                    value={productForm.price}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-ps-neon"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Stock</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={productForm.stock}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, stock: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-ps-neon"
-                  />
-                </div>
-              </div>
-
-              {/* Dynamic tag based on category */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Etiqueta Principal (Badge)
+                  <label className="block text-xs font-bold text-slate-200 mb-1">
+                    2. Nombre del Juego / Título *
                   </label>
                   <input
                     type="text"
-                    placeholder="Ej: Físico Usado, Con HEN, Sellada..."
-                    value={productForm.tag}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, tag: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
+                    required
+                    placeholder="Ej: God of War Ragnarök o EA Sports FC 24"
+                    value={productForm.name}
+                    onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-ps-neon"
                   />
                 </div>
 
-                {/* Conditional specs based on category */}
-                {productForm.category === 'juegos_ps4' || productForm.category === 'juegos_ps3' ? (
-                  <>
+                {/* 3. Precio ($ ARS) y Stock */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-200 mb-1">
+                      3. Precio ($ ARS) *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ps-neon font-bold text-xs">$</span>
+                      <input
+                        type="number"
+                        required
+                        placeholder="42000"
+                        value={productForm.price}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, price: e.target.value }))}
+                        className="w-full pl-7 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-mono font-bold focus:outline-none focus:border-ps-neon"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-200 mb-1">
+                      Stock Disponible
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={productForm.stock}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, stock: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-ps-neon"
+                    />
+                  </div>
+                </div>
+
+                {/* 4. Foto de la Carátula (Canvas 600px, JPEG 0.75) */}
+                <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2.5">
+                  <label className="block text-xs font-bold text-white flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-ps-neon" />
+                      <span>4. Foto de la Carátula</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-normal">Máx 600px • Canvas</span>
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* File upload from mobile/PC */}
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Formato de Venta</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleImageFileUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        disabled={isCompressingImage}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-2 px-3 rounded-xl bg-ps-blue/20 hover:bg-ps-blue/30 border border-ps-blue/50 text-ps-neon text-xs font-bold flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                      >
+                        {isCompressingImage ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-ps-neon" />
+                            <span>Comprimiendo...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Subir desde Celular/PC</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Paste URL */}
+                    <div>
+                      <input
+                        type="url"
+                        placeholder="O pegar URL web de portada"
+                        value={productForm.image.startsWith('data:') ? '' : productForm.image}
+                        onChange={(e) => {
+                          setProductForm(prev => ({ ...prev, image: e.target.value }));
+                          setCompressionDetails(null);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-ps-neon"
+                      />
+                    </div>
+                  </div>
+
+                  {compressionDetails && (
+                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[10px] text-emerald-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-emerald-400" />
+                        <span>Comprimido en Canvas:</span>
+                      </span>
+                      <span className="font-mono">
+                        {compressionDetails.originalSizeKb} KB ➔ <strong>{compressionDetails.compressedSizeKb} KB</strong> ({compressionDetails.dimensions})
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. Formato y Condición */}
+                {productForm.category === 'juegos_ps4' || productForm.category === 'juegos_ps3' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Estado de Venta</label>
                       <select
                         value={productForm.format || 'Físico Usado'}
                         onChange={(e) => setProductForm(prev => ({ ...prev, format: e.target.value, tag: e.target.value }))}
@@ -1534,81 +1646,179 @@ export default function AdminDashboard({ onClose }) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">Condición de Caja / Disco</label>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Detalle de Caja/Disco</label>
                       <input
                         type="text"
-                        placeholder="Ej: Caja Original, Disco 10/10, Con Mapa, Hits..."
+                        placeholder="Ej: Caja Original, Disco 10/10, Con Mapa..."
                         value={productForm.condition || ''}
                         onChange={(e) => setProductForm(prev => ({ ...prev, condition: e.target.value }))}
                         className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
                       />
                     </div>
-                  </>
-                ) : productForm.category.includes('consola') ? (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Capacidad / Modelo</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Slim 1TB o Super Slim 500GB"
-                      value={productForm.capacity || productForm.model}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, capacity: e.target.value, model: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
-                    />
                   </div>
                 ) : (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Tipo de Joystick / Accesorio</label>
-                    <input
-                      type="text"
-                      placeholder="Ej: Original Sony Reacondicionado / Alternativo AAA"
-                      value={productForm.type || productForm.format}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value, format: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Modelo / Capacidad</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Slim 1TB o Alternativo AAA"
+                        value={productForm.model || productForm.capacity || ''}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, model: e.target.value, capacity: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Sistema / Estado</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Original / Con HEN"
+                        value={productForm.systemStatus || productForm.type || ''}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, systemStatus: e.target.value, type: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
+                      />
+                    </div>
                   </div>
                 )}
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-ps-border">
+                  <button
+                    type="button"
+                    onClick={() => setIsProductModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-semibold"
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white font-extrabold text-xs tracking-wide shadow-ps-glow transition-all"
+                  >
+                    {editingProduct ? 'Guardar Cambios' : 'Guardar y Publicar'}
+                  </button>
+                </div>
+              </form>
+
+              {/* RIGHT COLUMN: VISTA PREVIA EN VIVO (AL COSTADO DEL FORMULARIO) */}
+              <div className="lg:col-span-5 bg-slate-950/90 rounded-2xl p-4 sm:p-5 border border-ps-border flex flex-col items-center sticky top-2 shadow-xl">
+                
+                <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="text-[11px] font-bold text-white font-gaming tracking-wider uppercase">
+                      Vista Previa en Vivo
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-ps-neon font-mono bg-ps-blue/15 px-2 py-0.5 rounded border border-ps-blue/30">
+                    Tiempo Real
+                  </span>
+                </div>
+
+                {/* Real-time Assembled Blu-ray Game Box */}
+                {productForm.category === 'juegos_ps4' || productForm.category === 'juegos_ps3' ? (
+                  <div className="w-48 sm:w-52 rounded-xl bg-ps-surface border border-ps-border shadow-2xl overflow-hidden animate-fadeIn">
+                    
+                    {/* Simulated Case Shell */}
+                    <div className="p-2 bg-gradient-to-b from-slate-900 to-ps-surface">
+                      <div className={`rounded-lg overflow-hidden border-2 ${
+                        productForm.category === 'juegos_ps4'
+                          ? 'border-[#0070d1]/70 shadow-[0_0_15px_rgba(0,112,209,0.35)]'
+                          : 'border-red-800/70 shadow-[0_0_15px_rgba(185,28,28,0.25)]'
+                      } bg-slate-950`}>
+                        
+                        {/* Tape Header */}
+                        {productForm.category === 'juegos_ps4' ? (
+                          <div className="bg-[#0070d1] text-white px-2 py-1 flex items-center justify-between shadow-md">
+                            <span className="font-extrabold text-xs tracking-wider font-gaming">PS4</span>
+                            <span className="text-[8px] uppercase tracking-wider opacity-85 font-mono">Blu-ray</span>
+                          </div>
+                        ) : (
+                          <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-red-700 text-white px-2 py-1 flex items-center justify-between shadow-md border-b border-red-500/40">
+                            <span className="font-extrabold text-xs tracking-wider font-gaming text-red-100">PS3</span>
+                            <span className="text-[8px] uppercase tracking-wider text-red-200 font-mono">Blu-ray</span>
+                          </div>
+                        )}
+
+                        {/* Cover Image in 3/4 ratio */}
+                        <div className="relative aspect-[3/4] w-full overflow-hidden bg-slate-900">
+                          <img
+                            src={productForm.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80'}
+                            alt="Vista previa caja"
+                            className="w-full h-full object-cover"
+                          />
+
+                          {/* Spine Sheen */}
+                          <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-white/35 via-white/10 to-transparent pointer-events-none z-10" />
+
+                          {/* Top "Físico" Badge */}
+                          <div className="absolute top-1.5 left-1.5 z-20">
+                            <span className="text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded shadow bg-slate-950/90 text-ps-neon border border-ps-neon/60">
+                              FÍSICO
+                            </span>
+                          </div>
+
+                          {/* Yellow Retail Price Splash */}
+                          <div className="absolute bottom-1.5 right-1.5 z-20">
+                            <div className="bg-[#facc15] text-neutral-950 px-2 py-0.5 rounded-lg shadow-2xl border-2 border-black rotate-[-2deg]">
+                              <div className="text-[7px] font-black uppercase text-red-700 leading-none">OFERTA</div>
+                              <div className="text-xs sm:text-sm font-black font-gaming leading-tight">
+                                {formatARS(productForm.price || 42000)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Card Footer Title & Simulated Button */}
+                    <div className="p-2.5 bg-ps-surface border-t border-slate-800">
+                      <h4 className="text-xs font-bold text-white truncate">
+                        {productForm.name || 'Nombre del Juego'}
+                      </h4>
+                      <div className="text-[10px] text-slate-400 truncate">
+                        {productForm.condition || productForm.format || 'Físico Usado Impecable'}
+                      </div>
+                      <div className="mt-2 w-full py-1.5 rounded-lg bg-ps-blue/40 border border-ps-blue/50 text-white text-[10px] font-bold text-center">
+                        Agregar al Carrito
+                      </div>
+                    </div>
+
+                  </div>
+                ) : (
+                  /* Live Console / Accessory Wide Preview */
+                  <div className="w-full rounded-2xl bg-ps-surface border border-ps-border p-4 shadow-xl">
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 mb-3 border border-slate-800">
+                      <img
+                        src={productForm.image || 'https://images.unsplash.com/photo-1507457379470-08b800bebc67?auto=format&fit=crop&w=800&q=80'}
+                        alt="Vista previa consola"
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded bg-black/80 text-ps-neon font-bold">
+                        {productForm.category}
+                      </span>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-white truncate">
+                      {productForm.name || 'Título de Consola / Accesorio'}
+                    </h4>
+                    
+                    <div className="text-base font-bold font-gaming text-ps-neon mt-2">
+                      {formatARS(productForm.price || 0)}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-slate-500 text-center mt-3">
+                  💡 Los cambios que hagas en el formulario se reflejan instantáneamente aquí.
+                </p>
+
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Descripción detallada</label>
-                <textarea
-                  rows={2}
-                  placeholder="Detalles de contenido, estado físico, idiomas, trofeos o accesorios incluidos..."
-                  value={productForm.description}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
-                />
-              </div>
+            </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="featuredCheck"
-                  checked={productForm.featured}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, featured: e.target.checked }))}
-                  className="w-4 h-4 rounded bg-slate-900 border-slate-800 text-ps-blue focus:ring-ps-neon"
-                />
-                <label htmlFor="featuredCheck" className="text-xs text-slate-300 cursor-pointer">
-                  Destacar este producto en la página principal
-                </label>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-ps-border">
-                <button
-                  type="button"
-                  onClick={() => setIsProductModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-ps-blue hover:bg-ps-blueLight text-white font-bold text-xs shadow-ps-glow"
-                >
-                  {editingProduct ? 'Guardar Cambios' : 'Publicar Producto'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
