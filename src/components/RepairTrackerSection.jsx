@@ -79,11 +79,11 @@ export default function RepairTrackerSection() {
         </div>
 
         {/* Highlighted Search Box */}
-        <div className="rounded-2xl bg-gradient-to-b from-ps-surface to-slate-900 border-2 border-ps-neon/40 shadow-ps-glow p-6 sm:p-8 max-w-2xl mx-auto mb-8">
+        <div className="rounded-2xl bg-gradient-to-b from-ps-surface to-slate-900 border-2 border-ps-neon/40 shadow-ps-glow p-4 sm:p-8 max-w-2xl mx-auto mb-8">
           
           <form
             onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
-            className="flex flex-col sm:flex-row items-center gap-3"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
           >
             <div className="relative w-full">
               <Search className="w-5 h-5 text-ps-neon absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -91,14 +91,14 @@ export default function RepairTrackerSection() {
                 type="text"
                 value={dniQuery}
                 onChange={(e) => setDniQuery(e.target.value)}
-                placeholder="Ingresá tu DNI (ej: 38111222 o N° Orden)"
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-ps-bg border border-ps-border focus:border-ps-neon text-base text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-ps-neon/30 transition-all font-mono"
+                placeholder="Ingresá tu DNI o N° Orden"
+                className="w-full pl-11 pr-4 py-3 sm:py-3.5 rounded-xl bg-ps-bg border border-ps-border focus:border-ps-neon text-sm sm:text-base text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-ps-neon/30 transition-all font-mono"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white font-bold text-sm tracking-wide shadow-ps-glow transition-all whitespace-nowrap flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 sm:py-3.5 rounded-xl bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white font-bold text-sm tracking-wide shadow-ps-glow transition-all whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Consultar</span>
               <ArrowRight className="w-4 h-4" />
@@ -106,17 +106,17 @@ export default function RepairTrackerSection() {
           </form>
 
           {/* Quick Demo Chips */}
-          <div className="mt-4 pt-4 border-t border-ps-border/70 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-400 font-medium">DNIs de prueba para probar:</span>
+          <div className="mt-3.5 pt-3.5 border-t border-ps-border/70 flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-[11px] sm:text-xs text-slate-400 font-medium">DNIs de prueba:</span>
             {SAMPLE_DNIS.map((sample) => (
               <button
                 key={sample.dni}
                 type="button"
                 onClick={() => handleSampleClick(sample.dni)}
-                className="text-xs px-2.5 py-1 rounded-lg bg-ps-blue/20 hover:bg-ps-blue/40 border border-ps-blue/40 text-ps-neon hover:text-white font-mono transition-all flex items-center gap-1.5"
+                className="text-[11px] sm:text-xs px-2.5 py-1 rounded-lg bg-ps-blue/20 hover:bg-ps-blue/40 border border-ps-blue/40 text-ps-neon hover:text-white font-mono transition-all flex items-center gap-1 cursor-pointer"
               >
                 <span>{sample.dni}</span>
-                <span className="text-[10px] text-slate-400 font-sans">({sample.device})</span>
+                <span className="text-[9px] text-slate-400 font-sans">({sample.device})</span>
               </button>
             ))}
           </div>
@@ -201,53 +201,53 @@ export default function RepairTrackerSection() {
                       </div>
 
                       {/* Visual Stepper & Progress Bar */}
-                      <div className="my-6">
-                        <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
+                      <div className="my-5 sm:my-6">
+                        <div className="flex items-center justify-between text-[10px] xs:text-xs font-semibold text-slate-400 mb-2">
                           <span className={repair.status === 'En fila' ? 'text-amber-400 font-bold' : ''}>1. En fila</span>
                           <span className={repair.status === 'En taller' ? 'text-ps-neon font-bold' : ''}>2. En taller</span>
                           <span className={repair.status === 'Listo para retirar' ? 'text-emerald-400 font-bold' : ''}>3. Listo</span>
                           <span className={repair.status === 'Entregado' ? 'text-slate-300 font-bold' : ''}>4. Entregado</span>
                         </div>
 
-                        <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700">
+                        <div className="w-full bg-slate-800 rounded-full h-2.5 sm:h-3 overflow-hidden p-0.5 border border-slate-700">
                           <div
                             className={`h-full rounded-full transition-all duration-700 ease-out ${statusInfo.barColor}`}
                             style={{ width: `${statusInfo.progress}%` }}
                           />
                         </div>
 
-                        <p className="text-xs text-slate-400 mt-2.5 italic">
+                        <p className="text-[11px] sm:text-xs text-slate-400 mt-2 italic">
                           ℹ️ {statusInfo.description}
                         </p>
                       </div>
 
                       {/* Fault and Technician Notes Card */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
-                        <div className="p-3.5 rounded-xl bg-ps-bg border border-ps-border">
-                          <div className="text-[11px] font-semibold text-slate-500 uppercase">Falla Reportada</div>
-                          <div className="text-xs sm:text-sm font-medium text-slate-200 mt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 my-5 sm:my-6">
+                        <div className="p-3 sm:p-3.5 rounded-xl bg-ps-bg border border-ps-border">
+                          <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase">Falla Reportada</div>
+                          <div className="text-xs sm:text-sm font-medium text-slate-200 mt-0.5 sm:mt-1">
                             {repair.issue}
                           </div>
                         </div>
 
-                        <div className="p-3.5 rounded-xl bg-ps-bg border border-ps-border">
-                          <div className="text-[11px] font-semibold text-slate-500 uppercase">Diagnóstico / Trabajo Técnico</div>
-                          <div className="text-xs sm:text-sm font-medium text-slate-300 mt-1">
+                        <div className="p-3 sm:p-3.5 rounded-xl bg-ps-bg border border-ps-border">
+                          <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase">Diagnóstico / Trabajo Técnico</div>
+                          <div className="text-xs sm:text-sm font-medium text-slate-300 mt-0.5 sm:mt-1">
                             {repair.technicianNotes || 'En proceso de evaluación en banco de trabajo.'}
                           </div>
                         </div>
                       </div>
 
                       {/* Footer with Cost and WhatsApp Action */}
-                      <div className="pt-4 border-t border-ps-border/70 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="pt-4 border-t border-ps-border/70 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                         <div>
-                          <div className="text-xs text-slate-400">Presupuesto / Total del servicio:</div>
+                          <div className="text-[11px] sm:text-xs text-slate-400">Presupuesto / Total del servicio:</div>
                           <div className="text-xl sm:text-2xl font-extrabold text-white font-gaming text-ps-neon">
                             {formatARS(repair.cost)}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                           <a
                             href={buildWhatsAppQueryUrl(repair)}
                             target="_blank"

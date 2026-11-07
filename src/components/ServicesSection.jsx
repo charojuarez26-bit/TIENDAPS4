@@ -24,27 +24,27 @@ export default function ServicesSection() {
   };
 
   return (
-    <section id="servicios" className="py-12 md:py-20 bg-gradient-to-b from-ps-bg via-ps-surface/40 to-ps-bg relative border-t border-ps-border">
+    <section id="servicios" className="py-8 sm:py-12 md:py-20 bg-gradient-to-b from-ps-bg via-ps-surface/40 to-ps-bg relative border-t border-ps-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-2 mb-3">
+        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-14">
+          <div className="inline-flex items-center gap-2 mb-2 sm:mb-3">
             <PlayStationSymbolsRow size="w-3.5 h-3.5" />
-            <span className="text-xs uppercase font-bold text-ps-neon tracking-wider">Laboratorio Técnico Aguilares</span>
+            <span className="text-[11px] sm:text-xs uppercase font-bold text-ps-neon tracking-wider">Laboratorio Técnico Aguilares</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-gaming tracking-wide">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-gaming tracking-wide">
             SERVICIO TÉCNICO ESPECIALIZADO
           </h2>
 
-          <p className="mt-3 text-sm sm:text-base text-slate-300">
+          <p className="mt-2 text-xs sm:text-sm md:text-base text-slate-300">
             Diagnóstico preciso en banco de trabajo, insumos térmicos importados de alta gama y garantía escrita en cada trabajo realizado.
           </p>
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {services.map((service) => {
             const Icon = SERVICE_ICONS[service.icon] || Wrench;
             const isAdded = addedIds[service.id];
@@ -52,7 +52,7 @@ export default function ServicesSection() {
             return (
               <div
                 key={service.id}
-                className="group flex flex-col justify-between rounded-2xl bg-ps-surface border border-ps-border hover:border-ps-neon/60 hover:shadow-ps-glow transition-all duration-300 p-6 relative overflow-hidden"
+                className="group flex flex-col justify-between rounded-2xl bg-ps-surface border border-ps-border hover:border-ps-neon/60 hover:shadow-ps-glow transition-all duration-300 p-4 sm:p-6 relative overflow-hidden"
               >
                 {/* Glow accent */}
                 <div className="absolute -top-10 -right-10 w-24 h-24 bg-ps-blue/10 rounded-full blur-xl group-hover:bg-ps-neon/20 transition-all pointer-events-none" />
@@ -149,15 +149,15 @@ export default function ServicesSection() {
         </div>
 
         {/* Extra Service Guarantee Card */}
-        <div className="mt-10 p-6 rounded-2xl bg-gradient-to-r from-ps-surface via-slate-900 to-ps-surface border border-ps-border flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              <ShieldCheck className="w-8 h-8" />
+        <div className="mt-8 sm:mt-10 p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-ps-surface via-slate-900 to-ps-surface border border-ps-border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2.5 sm:p-3.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+              <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
             <div>
-              <h4 className="text-base font-bold text-white">¿Tenés otra falla o consulta técnica?</h4>
-              <p className="text-xs sm:text-sm text-slate-400">
-                Traé tu consola al local en el centro de Aguilares para presupuesto sin cargo. También reparamos fuentes, lectores y HDMI.
+              <h4 className="text-sm sm:text-base font-bold text-white">¿Tenés otra falla o consulta técnica?</h4>
+              <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                Traé tu consola al local en Aguilares para presupuesto sin cargo. También reparamos fuentes, lectores y HDMI.
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function ServicesSection() {
             href="https://wa.me/5493865000000?text=%C2%A1Hola!%20Tengo%20una%20consulta%20t%C3%A9cnica%20sobre%20mi%20consola"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-2.5 rounded-xl bg-ps-blue/20 hover:bg-ps-blue border border-ps-blue/40 text-ps-neon hover:text-white font-semibold text-xs transition-all whitespace-nowrap shadow-sm"
+            className="w-full md:w-auto px-5 py-3 rounded-xl bg-ps-blue/20 hover:bg-ps-blue border border-ps-blue/40 text-ps-neon hover:text-white font-semibold text-xs sm:text-sm transition-all whitespace-nowrap shadow-sm text-center cursor-pointer"
           >
             Consultar al Técnico por WhatsApp
           </a>

@@ -28,37 +28,36 @@ export default function CatalogSection({ onOpenFullCatalog }) {
   const dynamicFilters = useMemo(() => {
     if (isGameCategory) {
       return [
-        { id: 'all', label: 'Todos los discos' },
-        { id: 'usado', label: '💿 Físico Usado' },
-        { id: 'nuevo', label: '✨ Físico Nuevo Sellado' },
+        { id: 'all', label: 'Todos' },
+        { id: 'usado', label: '💿 Usados' },
+        { id: 'nuevo', label: '✨ Sellados' },
       ];
     }
 
     switch (activeCategory) {
       case 'consolas_ps4':
         return [
-          { id: 'all', label: 'Todas las PS4' },
+          { id: 'all', label: 'Todas' },
           { id: 'slim', label: 'PS4 Slim' },
           { id: 'pro', label: 'PS4 Pro 4K' },
         ];
       case 'consolas_ps3':
         return [
-          { id: 'all', label: 'Todas las PS3' },
-          { id: 'hen', label: '🪄 Con HEN / Juegos' },
-          { id: 'original', label: '💿 Sistema Original' },
+          { id: 'all', label: 'Todas' },
+          { id: 'hen', label: '🪄 Con HEN' },
+          { id: 'original', label: '💿 Original' },
         ];
       case 'accesorios':
         return [
-          { id: 'all', label: 'Todos los accesorios' },
-          { id: 'sony', label: '🎮 Original Sony' },
-          { id: 'alternativo', label: '🕹️ Alternativo AAA' },
+          { id: 'all', label: 'Todos' },
+          { id: 'sony', label: '🎮 Sony' },
+          { id: 'alternativo', label: '🕹️ AAA' },
         ];
       default:
         return [{ id: 'all', label: 'Todos' }];
     }
   }, [activeCategory, isGameCategory]);
 
-  // Reset subfilter when category changes
   const handleCategoryChange = (catId) => {
     setActiveCategory(catId);
     setSelectedSubfilter('all');
@@ -110,7 +109,7 @@ export default function CatalogSection({ onOpenFullCatalog }) {
           return systemStatus.includes('original') || tag.includes('original');
         }
         if (selectedSubfilter === 'sony') {
-          return type.includes('sony') || tag.includes('sony') || item.name.toLowerCase().includes('sony');
+          return type.includes('sony') || tag.includes('sony') || tag.includes('original');
         }
         if (selectedSubfilter === 'alternativo') {
           return type.includes('alternativo') || tag.includes('alternativo');
@@ -133,26 +132,28 @@ export default function CatalogSection({ onOpenFullCatalog }) {
     setAddedIds(prev => ({ ...prev, [product.id]: true }));
     setTimeout(() => {
       setAddedIds(prev => ({ ...prev, [product.id]: false }));
-    }, 1500);
+    }, 1200);
   };
 
   return (
-    <section id="catalogo" className="py-12 md:py-20 bg-ps-bg relative">
+    <section id="catalogo" className="py-8 sm:py-12 md:py-20 bg-ps-bg relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <PlayStationSymbolsRow size="w-3.5 h-3.5" />
-              <span className="text-xs uppercase font-bold text-ps-neon tracking-wider">Catálogo Físico & Consolas</span>
+              <span className="text-[11px] sm:text-xs uppercase font-bold text-ps-neon tracking-wider">
+                Catálogo Físico & Consolas
+              </span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-gaming tracking-wide">
-              {isGameCategory ? 'JUEGOS FÍSICOS ORIGINALES' : 'CONSOLAS & ACCESORIOS'}
+              {isGameCategory ? 'JUEGOS FÍSICOS DESTACADOS' : 'CONSOLAS & ACCESORIOS'}
             </h2>
-            <p className="text-slate-400 text-sm mt-1 max-w-xl">
+            <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
               {isGameCategory 
-                ? 'Estuches Blu-ray originales con discos testeados al 100% en taller de Aguilares. ¡Precios de folleto retail!'
+                ? 'Estuches Blu-ray originales con discos testeados en taller de Aguilares. ¡Precios de folleto retail!'
                 : 'Consolas con mantenimiento preventivo, joysticks testeados y garantía escrita de 90 días.'
               }
             </p>
@@ -166,7 +167,7 @@ export default function CatalogSection({ onOpenFullCatalog }) {
               placeholder="Buscar título, consola o joystick..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-ps-surface border border-ps-border focus:border-ps-neon text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-ps-neon transition-all"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-ps-surface border border-ps-border focus:border-ps-neon text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-ps-neon transition-all"
             />
             {searchQuery && (
               <button
@@ -179,29 +180,30 @@ export default function CatalogSection({ onOpenFullCatalog }) {
           </div>
         </div>
 
-        {/* 5 Category Navigation Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-6">
+        {/* 5 Category Navigation Tabs (Mobile swipeable / Desktop grid) */}
+        <div className="flex items-stretch gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-5 scrollbar-none sm:overflow-visible mb-6">
           {CATEGORIES.map(cat => {
             const Icon = ICON_MAP[cat.icon] || Disc3;
             const isActive = activeCategory === cat.id;
+            const totalInCat = products.filter(p => p.category === cat.id).length;
 
             return (
               <button
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.id)}
-                className={`flex items-center gap-2.5 p-3 rounded-xl border text-sm font-semibold transition-all duration-200 text-left ${
+                className={`flex items-center gap-2 p-2.5 sm:p-3 rounded-xl border text-xs sm:text-sm font-semibold transition-all duration-200 text-left shrink-0 sm:shrink min-w-[155px] sm:min-w-0 cursor-pointer ${
                   isActive
                     ? 'bg-gradient-to-r from-ps-blue/30 to-ps-surfaceLight border-ps-neon text-white shadow-ps-glow'
                     : 'bg-ps-surface/80 border-ps-border text-slate-400 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
-                <div className={`p-2 rounded-lg ${isActive ? 'bg-ps-blue text-white shadow-ps-glow' : 'bg-slate-800 text-slate-400'}`}>
+                <div className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${isActive ? 'bg-ps-blue text-white shadow-ps-glow' : 'bg-slate-800 text-slate-400'}`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="leading-tight font-bold text-xs sm:text-sm">{cat.label}</div>
+                <div className="truncate">
+                  <div className="leading-tight font-bold text-xs sm:text-sm truncate">{cat.label}</div>
                   <span className="text-[10px] text-slate-500 font-normal">
-                    {products.filter(p => p.category === cat.id).length} ítems en stock
+                    {totalInCat} en stock
                   </span>
                 </div>
               </button>
@@ -210,20 +212,20 @@ export default function CatalogSection({ onOpenFullCatalog }) {
         </div>
 
         {/* Dynamic Filters & Sorting bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-ps-surface/50 border border-ps-border mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-ps-surface/50 border border-ps-border mb-6">
           {/* Subfilter Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 pl-1 shrink-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-400 flex items-center gap-1 pl-1 shrink-0">
               <SlidersHorizontal className="w-3.5 h-3.5" /> Estado:
             </span>
             {dynamicFilters.map(filter => (
               <button
                 key={filter.id}
                 onClick={() => setSelectedSubfilter(filter.id)}
-                className={`text-xs px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all ${
+                className={`text-[11px] sm:text-xs px-2.5 py-1 rounded-lg font-medium transition-all whitespace-nowrap cursor-pointer ${
                   selectedSubfilter === filter.id
-                    ? 'bg-ps-blue text-white shadow-sm font-semibold'
-                    : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/50'
+                    ? 'bg-ps-blue text-white font-bold shadow-sm'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
                 {filter.label}
@@ -231,9 +233,9 @@ export default function CatalogSection({ onOpenFullCatalog }) {
             ))}
           </div>
 
-          {/* Sort selector */}
-          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-            <span className="text-xs text-slate-400">Ordenar por:</span>
+          {/* Sorter Dropdown */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-slate-400">
+            <span>Ordenar:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -246,23 +248,23 @@ export default function CatalogSection({ onOpenFullCatalog }) {
           </div>
         </div>
 
-        {/* Informative Retail Header Banner for Games */}
+        {/* Informative Header Banner for Games */}
         {isGameCategory && (
-          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-[#0070d1]/15 via-ps-surface to-slate-900 border border-[#0070d1]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#0070d1] text-white flex items-center justify-center font-bold text-sm shrink-0 font-gaming shadow-md">
+          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-[#0070d1]/15 via-ps-surface to-slate-900 border border-[#0070d1]/40 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#0070d1] text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 font-gaming shadow-md">
                 {activeCategory === 'juegos_ps4' ? 'PS4' : 'PS3'}
               </div>
-              <div className="text-xs sm:text-sm text-slate-200">
-                <span className="font-bold text-white">Selección Destacada</span> • Mostrando {Math.min(6, filteredProducts.length)} de {filteredProducts.length} títulos disponibles en local.
+              <div className="text-xs sm:text-sm text-slate-200 leading-snug">
+                <span className="font-bold text-white">Selección Destacada</span> • {Math.min(6, filteredProducts.length)} de {filteredProducts.length} títulos en local.
               </div>
             </div>
             
             <button
               onClick={() => onOpenFullCatalog && onOpenFullCatalog(activeCategory)}
-              className="text-xs font-bold text-ps-neon hover:text-white flex items-center gap-1.5 self-start sm:self-auto px-3 py-1.5 rounded-lg bg-ps-blue/20 border border-ps-neon/40 hover:bg-ps-blue/40 transition-colors"
+              className="text-xs font-bold text-ps-neon hover:text-white flex items-center gap-1.5 self-start xs:self-auto px-3 py-1.5 rounded-lg bg-ps-blue/20 border border-ps-neon/40 hover:bg-ps-blue/40 transition-colors cursor-pointer"
             >
-              <span>Ver Todos ({products.filter(p => p.category === activeCategory).length} títulos)</span>
+              <span>Ver Catálogo Completo</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -270,25 +272,25 @@ export default function CatalogSection({ onOpenFullCatalog }) {
 
         {/* PRODUCTS RENDER */}
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-16 px-4 rounded-2xl bg-ps-surface/40 border border-ps-border">
-            <AlertCircle className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-white font-gaming">No se encontraron productos</h3>
-            <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
+          <div className="text-center py-12 px-4 rounded-2xl bg-ps-surface/40 border border-ps-border">
+            <AlertCircle className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+            <h3 className="text-base sm:text-lg font-bold text-white font-gaming">No se encontraron productos</h3>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-sm mx-auto">
               Prueba cambiando el filtro de estado o la búsqueda de texto.
             </p>
             <button
               onClick={() => { setSelectedSubfilter('all'); setSearchQuery(''); }}
-              className="mt-4 px-4 py-2 rounded-lg bg-ps-blue/30 text-ps-neon border border-ps-blue/50 text-xs font-semibold hover:bg-ps-blue/50 transition-colors"
+              className="mt-4 px-4 py-2 rounded-lg bg-ps-blue/30 text-ps-neon border border-ps-blue/50 text-xs font-semibold hover:bg-ps-blue/50 transition-colors cursor-pointer"
             >
               Restablecer filtros
             </button>
           </div>
         ) : isGameCategory ? (
           /* ======================================================== */
-          /* 1. DENSE GRID OF PHYSICAL BLU-RAY BOXES (Top 6 Featured) */
+          /* 1. DENSE GRID OF PHYSICAL BLU-RAY BOXES (Top 6 on Home)  */
           /* ======================================================== */
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 animate-fadeIn">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4 animate-fadeIn">
               {filteredProducts.slice(0, 6).map(product => (
                 <PhysicalGameBox
                   key={product.id}
@@ -298,24 +300,24 @@ export default function CatalogSection({ onOpenFullCatalog }) {
               ))}
             </div>
 
-            {/* CTA to Full Catalog */}
-            <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-ps-surface via-slate-900 to-ps-surface border border-ps-blue/40 relative overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="relative z-10 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 text-ps-neon text-xs font-bold uppercase tracking-wider mb-2">
-                  <Sparkles className="w-4 h-4 text-ps-neon animate-spin-slow" />
+            {/* Mobile-Friendly CTA to Full Catalog */}
+            <div className="mt-8 p-5 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-ps-surface via-slate-900 to-ps-surface border border-ps-blue/40 relative overflow-hidden shadow-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5">
+              <div className="relative z-10 text-left">
+                <div className="inline-flex items-center gap-1.5 text-ps-neon text-xs font-bold uppercase tracking-wider mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-ps-neon animate-spin-slow" />
                   <span>Catálogo Extendido Disponible</span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold font-gaming text-white">
+                <h3 className="text-lg sm:text-2xl font-bold font-gaming text-white">
                   ¿QUERÉS VER TODOS LOS JUEGOS?
                 </h3>
-                <p className="text-slate-300 text-sm mt-1 max-w-xl">
+                <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
                   En nuestra página exclusiva de Catálogo Completo podés buscar entre más de {products.length} videojuegos físicos de PS4 y PS3, consolas selladas y accesorios con stock en vivo.
                 </p>
               </div>
 
               <button
                 onClick={() => onOpenFullCatalog && onOpenFullCatalog(activeCategory)}
-                className="shrink-0 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-ps-blue to-ps-blueLight text-white font-extrabold text-xs sm:text-sm shadow-ps-glow hover:shadow-ps-glowLg hover:scale-105 transition-all flex items-center gap-2 group cursor-pointer"
+                className="shrink-0 w-full md:w-auto px-6 py-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-ps-blue to-ps-blueLight text-white font-extrabold text-xs sm:text-sm shadow-ps-glow hover:shadow-ps-glowLg hover:scale-105 transition-all flex items-center justify-center gap-2 group cursor-pointer"
               >
                 <span>VER CATÁLOGO COMPLETO ({products.length} ÍTEMS)</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -326,7 +328,7 @@ export default function CatalogSection({ onOpenFullCatalog }) {
           /* ======================================================== */
           /* 2. WIDE CARDS FOR CONSOLES AND ACCESSORIES              */
           /* ======================================================== */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fadeIn">
             {filteredProducts.map(product => {
               const hasStock = product.stock > 0;
               const isAdded = addedIds[product.id];
@@ -351,14 +353,14 @@ export default function CatalogSection({ onOpenFullCatalog }) {
                     <div className="absolute inset-0 bg-gradient-to-t from-ps-surface via-transparent to-transparent opacity-90" />
 
                     {/* Badge top-left */}
-                    <div className="absolute top-3 left-3">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-ps-bg/90 border border-ps-neon/40 text-ps-neon backdrop-blur-sm shadow-md">
+                    <div className="absolute top-2.5 left-2.5">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-ps-bg/90 border border-ps-neon/40 text-ps-neon backdrop-blur-sm shadow-md">
                         {product.tag || product.model || 'Garantía 90 Días'}
                       </span>
                     </div>
 
                     {/* Stock badge top-right */}
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-2.5 right-2.5">
                       {hasStock ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 backdrop-blur-sm">
                           Stock: {product.stock}
@@ -372,28 +374,28 @@ export default function CatalogSection({ onOpenFullCatalog }) {
                   </div>
 
                   {/* Body Content with Specs */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
                     <div>
                       {/* Specifications Tags */}
-                      <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
                         {product.model && (
-                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-800 text-ps-neon font-semibold border border-slate-700">
+                          <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-ps-neon font-semibold border border-slate-700">
                             Modelo: {product.model}
                           </span>
                         )}
                         {product.capacity && (
-                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-200 font-semibold border border-slate-700">
+                          <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 font-semibold border border-slate-700">
                             💾 {product.capacity}
                           </span>
                         )}
                         {product.systemStatus && (
-                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-emerald-950/60 text-emerald-300 font-semibold border border-emerald-500/30">
+                          <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-emerald-950/60 text-emerald-300 font-semibold border border-emerald-500/30">
                             ⚙️ {product.systemStatus}
                           </span>
                         )}
                         {product.type && (
-                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-ps-blue/20 text-ps-neon font-semibold border border-ps-blue/40">
-                            ⚡ {product.type}
+                          <span className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                            {product.type}
                           </span>
                         )}
                       </div>
@@ -402,16 +404,16 @@ export default function CatalogSection({ onOpenFullCatalog }) {
                         {product.name}
                       </h3>
 
-                      <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
-                        {product.description || product.condition}
+                      <p className="text-xs text-slate-400 mt-1.5 leading-relaxed line-clamp-2">
+                        {product.description}
                       </p>
                     </div>
 
-                    {/* Price and Add button */}
-                    <div className="mt-5 pt-4 border-t border-ps-border flex items-center justify-between gap-3">
+                    {/* Price and Cart Footer */}
+                    <div className="mt-4 pt-3 border-t border-ps-border/70 flex items-center justify-between gap-3">
                       <div>
-                        <div className="text-[10px] text-slate-400 uppercase font-semibold">Precio Total ARS</div>
-                        <div className="text-xl font-extrabold text-white font-gaming text-ps-neon">
+                        <span className="text-[10px] text-slate-500 block">PRECIO CONTADO</span>
+                        <div className="text-lg sm:text-xl font-extrabold text-white font-gaming text-ps-neon">
                           {formatARS(product.price)}
                         </div>
                       </div>
@@ -419,28 +421,27 @@ export default function CatalogSection({ onOpenFullCatalog }) {
                       <button
                         onClick={() => handleAddWideProduct(product)}
                         disabled={!hasStock}
-                        className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all duration-200 ${
+                        className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
                           !hasStock
                             ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                             : isAdded
-                            ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
-                            : 'bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white shadow-ps-glow hover:scale-105'
+                            ? 'bg-emerald-500 text-slate-950 font-extrabold'
+                            : 'bg-ps-blue hover:bg-ps-blueLight text-white shadow-ps-glow active:scale-95'
                         }`}
                       >
                         {isAdded ? (
                           <>
-                            <Check className="w-4 h-4 stroke-[3]" />
-                            <span>¡Agregado!</span>
+                            <Check className="w-4 h-4" />
+                            <span>¡Listo!</span>
                           </>
                         ) : (
                           <>
                             <ShoppingBag className="w-4 h-4" />
-                            <span>{hasStock ? 'Agregar al Carrito' : 'Agotado'}</span>
+                            <span>{hasStock ? 'Comprar' : 'Agotado'}</span>
                           </>
                         )}
                       </button>
                     </div>
-
                   </div>
                 </div>
               );

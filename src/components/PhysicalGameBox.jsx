@@ -11,17 +11,18 @@ export default function PhysicalGameBox({ product, onAddToCart }) {
     if (!hasStock) return;
     onAddToCart(product);
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 1500);
+    setTimeout(() => setIsAdded(false), 1200);
   };
 
   // Determine condition tag
-  const isNuevo = (product.format || product.condition || product.tag || '').toLowerCase().includes('nuevo');
+  const isNuevo = (product.format || product.condition || product.tag || '').toLowerCase().includes('nuevo') || 
+                  (product.format || product.condition || product.tag || '').toLowerCase().includes('sellad');
 
   return (
-    <div className="group flex flex-col justify-between rounded-xl bg-ps-surface border border-ps-border hover:border-ps-neon/60 hover:shadow-ps-glow transition-all duration-300 overflow-hidden relative">
+    <div className="group flex flex-col justify-between rounded-xl bg-ps-surface border border-ps-border hover:border-ps-neon/60 hover:shadow-ps-glow transition-all duration-300 overflow-hidden relative select-none">
       
       {/* 1. PHYSICAL BLU-RAY CASE SHELL */}
-      <div className="relative p-1.5 sm:p-2 bg-gradient-to-b from-slate-900 via-slate-950 to-ps-surface">
+      <div className="relative p-1 sm:p-2 bg-gradient-to-b from-slate-900 via-slate-950 to-ps-surface">
         
         {/* Outer Blu-ray Case Frame with glossy plastic feel */}
         <div className={`relative rounded-lg overflow-hidden border-2 ${
@@ -32,25 +33,25 @@ export default function PhysicalGameBox({ product, onAddToCart }) {
           
           {/* A. Official Tape Header (Franja Superior Oficial de Caja) */}
           {isPS4 ? (
-            <div className="bg-[#0070d1] text-white px-2 py-1 flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-[12px] sm:text-sm tracking-wider font-gaming">PS4</span>
-                <span className="text-[8px] uppercase tracking-wider opacity-85 hidden xs:inline font-sans">PlayStation 4</span>
+            <div className="bg-[#0070d1] text-white px-1.5 py-0.5 sm:px-2 sm:py-1 flex items-center justify-between shadow-md">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="font-extrabold text-[11px] sm:text-sm tracking-wider font-gaming">PS4</span>
+                <span className="text-[7px] sm:text-[8px] uppercase tracking-wider opacity-85 hidden sm:inline font-sans">PlayStation 4</span>
               </div>
-              <div className="flex items-center gap-1 opacity-90">
-                <Disc className="w-3 h-3 animate-spin-slow" />
-                <span className="text-[8px] font-bold tracking-widest uppercase">Blu-ray</span>
+              <div className="flex items-center gap-0.5 sm:gap-1 opacity-90 shrink-0">
+                <Disc className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin-slow shrink-0" />
+                <span className="text-[7px] sm:text-[8px] font-bold tracking-widest uppercase">Blu-ray</span>
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-red-700 text-white px-2 py-1 flex items-center justify-between shadow-md border-b border-red-500/40">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-[12px] sm:text-sm tracking-wider font-gaming text-red-100">PS3</span>
-                <span className="text-[8px] uppercase tracking-wider opacity-85 hidden xs:inline font-sans text-red-200">PlayStation 3</span>
+            <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-red-700 text-white px-1.5 py-0.5 sm:px-2 sm:py-1 flex items-center justify-between shadow-md border-b border-red-500/40">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="font-extrabold text-[11px] sm:text-sm tracking-wider font-gaming text-red-100">PS3</span>
+                <span className="text-[7px] sm:text-[8px] uppercase tracking-wider opacity-85 hidden sm:inline font-sans text-red-200">PlayStation 3</span>
               </div>
-              <div className="flex items-center gap-1 text-red-200">
-                <Disc className="w-3 h-3" />
-                <span className="text-[8px] font-bold tracking-widest uppercase">Blu-ray</span>
+              <div className="flex items-center gap-0.5 sm:gap-1 text-red-200 shrink-0">
+                <Disc className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
+                <span className="text-[7px] sm:text-[8px] font-bold tracking-widest uppercase">Blu-ray</span>
               </div>
             </div>
           )}
@@ -69,60 +70,60 @@ export default function PhysicalGameBox({ product, onAddToCart }) {
             />
 
             {/* Left Plastic Spine Sheen (Borde sutil translúcido a la izquierda simulando el lomo) */}
-            <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-white/35 via-white/10 to-transparent pointer-events-none z-10" />
-            <div className="absolute inset-y-0 left-2 w-px bg-black/40 pointer-events-none z-10" />
+            <div className="absolute inset-y-0 left-0 w-2.5 sm:w-3 bg-gradient-to-r from-white/35 via-white/10 to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-y-0 left-1.5 sm:left-2 w-px bg-black/40 pointer-events-none z-10" />
 
             {/* Top Badge: "Físico" */}
-            <div className="absolute top-2 left-2 z-20 flex flex-col gap-1 items-start">
-              <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded shadow-lg border bg-slate-950/90 text-ps-neon border-ps-neon/60 backdrop-blur-sm">
+            <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-20 flex flex-col gap-0.5 sm:gap-1 items-start">
+              <span className="text-[8px] sm:text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded shadow-lg border bg-slate-950/90 text-ps-neon border-ps-neon/60 backdrop-blur-sm">
                 FÍSICO
               </span>
               {isNuevo && (
-                <span className="text-[8px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 shadow border border-emerald-400">
+                <span className="text-[7px] sm:text-[8px] uppercase font-bold tracking-wider px-1 py-0.5 rounded bg-emerald-500 text-slate-950 shadow border border-emerald-400">
                   SELLADO
                 </span>
               )}
             </div>
 
             {/* Stock indicator badge top-right */}
-            <div className="absolute top-2 right-2 z-20">
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-20">
               {hasStock ? (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-900/90 text-emerald-400 border border-emerald-500/50 backdrop-blur-sm shadow">
+                <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-900/90 text-emerald-400 border border-emerald-500/50 backdrop-blur-sm shadow">
                   Stock: {product.stock}
                 </span>
               ) : (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-900/90 text-rose-300 border border-rose-500/50 backdrop-blur-sm shadow">
+                <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-900/90 text-rose-300 border border-rose-500/50 backdrop-blur-sm shadow">
                   Agotado
                 </span>
               )}
             </div>
 
             {/* C. RETAIL FLYER OFFER SPLASH / BADGE (Fondo amarillo #facc15 con texto negro ultra-bold) */}
-            <div className="absolute bottom-1.5 right-1.5 z-20">
-              <div className="bg-[#facc15] text-neutral-950 px-2 sm:px-2.5 py-1 rounded-lg shadow-2xl border-2 border-black rotate-[-2deg] group-hover:rotate-0 transition-transform">
-                <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider leading-none text-red-700">
+            <div className="absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 z-20">
+              <div className="bg-[#facc15] text-neutral-950 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg shadow-2xl border sm:border-2 border-black rotate-[-2deg] group-hover:rotate-0 transition-transform">
+                <div className="text-[7px] sm:text-[8px] font-black uppercase tracking-wider leading-none text-red-700">
                   OFERTA RETAIL
                 </div>
-                <div className="text-sm sm:text-base font-black font-gaming leading-tight tracking-tight text-neutral-950">
+                <div className="text-[11px] xs:text-xs sm:text-sm md:text-base font-black font-gaming leading-tight tracking-tight text-neutral-950">
                   {formatARS(product.price)}
                 </div>
               </div>
             </div>
 
             {/* Subtle bottom shadow overlay */}
-            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-8 sm:h-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
           </div>
 
         </div>
       </div>
 
       {/* 2. CARD FOOTER WITH TITLE & ACTION BUTTON */}
-      <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between bg-ps-surface">
+      <div className="p-2 sm:p-2.5 md:p-3 flex-1 flex flex-col justify-between bg-ps-surface">
         <div>
-          <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-ps-neon transition-colors line-clamp-1 leading-snug" title={product.name}>
+          <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-ps-neon transition-colors line-clamp-2 leading-snug min-h-[2rem]" title={product.name}>
             {product.name}
           </h3>
-          <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+          <p className="text-[10px] sm:text-[11px] text-slate-400 line-clamp-1 mt-0.5">
             {product.condition ? `Caja • ${product.condition}` : 'Disco original garantizado'}
           </p>
         </div>
@@ -131,7 +132,7 @@ export default function PhysicalGameBox({ product, onAddToCart }) {
         <button
           onClick={handleAdd}
           disabled={!hasStock}
-          className={`mt-2.5 w-full py-2 px-2 sm:px-3 rounded-lg font-bold text-[11px] sm:text-xs flex items-center justify-center gap-1.5 transition-all duration-200 ${
+          className={`mt-2 w-full py-2 px-2 rounded-lg font-bold text-[10px] xs:text-[11px] sm:text-xs flex items-center justify-center gap-1 sm:gap-1.5 transition-all duration-200 cursor-pointer ${
             !hasStock
               ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
               : isAdded
@@ -146,8 +147,17 @@ export default function PhysicalGameBox({ product, onAddToCart }) {
             </>
           ) : (
             <>
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>{hasStock ? 'Agregar al Carrito' : 'Sin Stock'}</span>
+              <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                {hasStock ? (
+                  <>
+                    <span className="hidden xs:inline">Agregar al Carrito</span>
+                    <span className="xs:hidden">Agregar</span>
+                  </>
+                ) : (
+                  'Sin Stock'
+                )}
+              </span>
             </>
           )}
         </button>

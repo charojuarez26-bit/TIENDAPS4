@@ -489,45 +489,49 @@ export default function AdminDashboard({ onClose }) {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-ps-bg text-slate-100 flex flex-col">
       
       {/* Top Admin Navigation Header */}
-      <div className="bg-ps-surface border-b border-ps-border px-4 sm:px-8 py-3.5 sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div className="bg-ps-surface border-b border-ps-border px-3 sm:px-8 py-2.5 sm:py-3.5 sticky top-0 z-30 shadow-md">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-ps-neon text-slate-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-semibold"
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-ps-neon text-slate-300 hover:text-white transition-all flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-ps-neon" />
-              <span>Volver a la Tienda</span>
+              <span className="hidden xs:inline">Volver a la Tienda</span>
+              <span className="xs:hidden">Volver</span>
             </button>
 
             <div className="h-6 w-px bg-slate-800 hidden sm:block" />
 
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-ps-blue flex items-center justify-center font-gaming font-bold text-white text-xs shadow-ps-glow">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-7 h-7 rounded-lg bg-ps-blue flex items-center justify-center font-gaming font-bold text-white text-xs shadow-ps-glow shrink-0">
                 PS
               </div>
-              <div>
-                <div className="text-xs sm:text-sm font-bold text-white font-gaming tracking-wide flex items-center gap-2">
-                  <span>PANEL DE ADMINISTRACIÓN</span>
-                  <PlayStationSymbolsRow size="w-3 h-3" spacing="space-x-1" />
+              <div className="truncate">
+                <div className="text-xs sm:text-sm font-bold text-white font-gaming tracking-wide flex items-center gap-1.5 truncate">
+                  <span className="hidden sm:inline">PANEL DE ADMINISTRACIÓN</span>
+                  <span className="sm:hidden font-gaming text-xs">ADMIN</span>
+                  <div className="hidden xs:block">
+                    <PlayStationSymbolsRow size="w-2.5 h-2.5 sm:w-3 sm:h-3" spacing="space-x-1" />
+                  </div>
                 </div>
-                <div className="text-[10px] text-emerald-400 font-mono">
+                <div className="text-[9px] sm:text-[10px] text-emerald-400 font-mono truncate">
                   {config.businessName} • Sesión Activa
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => {
                 logoutAdmin();
                 onClose();
               }}
-              className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold transition-all"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold transition-all cursor-pointer"
             >
-              Cerrar Sesión
+              Salir
             </button>
           </div>
         </div>
@@ -1440,13 +1444,13 @@ export default function AdminDashboard({ onClose }) {
       {/* MODAL: CARGADOR RÁPIDO DE JUEGOS Y PRODUCTOS (SIDE-BY-SIDE) */}
       {/* ========================================================= */}
       {isProductModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
           <div
             className="absolute inset-0 bg-black/85 backdrop-blur-sm"
             onClick={() => setIsProductModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-4xl rounded-2xl bg-ps-surface border-2 border-ps-border shadow-2xl p-5 sm:p-7 max-h-[94vh] overflow-y-auto">
+          <div className="relative w-full max-w-4xl rounded-2xl bg-ps-surface border-2 border-ps-border shadow-2xl p-4 sm:p-7 max-h-[95vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-4 border-b border-ps-border mb-6">
               <div>

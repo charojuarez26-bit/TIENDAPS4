@@ -66,8 +66,8 @@ export default function CartDrawer() {
         onClick={() => setIsCartOpen(false)}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-ps-surface border-l border-ps-border shadow-2xl flex flex-col">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-full sm:max-w-md bg-ps-surface border-l border-ps-border shadow-2xl flex flex-col">
           
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-ps-border flex items-center justify-between bg-ps-bg/80">
@@ -326,17 +326,17 @@ export default function CartDrawer() {
 
           {/* Drawer Footer */}
           {cart.length > 0 && (
-            <div className="p-4 sm:p-5 border-t border-ps-border bg-ps-bg/95">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-slate-300 font-semibold">Total a abonar:</span>
-                <span className="text-2xl font-extrabold text-white font-gaming text-ps-neon">
+            <div className="p-4 sm:p-5 border-t border-ps-border bg-ps-bg/95 sticky bottom-0 z-10 pb-6 sm:pb-5">
+              <div className="flex items-center justify-between mb-3.5">
+                <span className="text-xs sm:text-sm text-slate-300 font-semibold">Total a abonar:</span>
+                <span className="text-xl sm:text-2xl font-extrabold text-white font-gaming text-ps-neon">
                   {formatARS(cartTotal)}
                 </span>
               </div>
 
               <button
                 onClick={handleCheckoutWhatsApp}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-extrabold text-sm tracking-wide shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 group"
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-extrabold text-xs sm:text-sm tracking-wide shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 group cursor-pointer active:scale-98"
               >
                 <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 <span>TERMINAR COMPRA POR WHATSAPP</span>
