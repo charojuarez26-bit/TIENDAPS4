@@ -29,7 +29,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Caja Original",
     tag: "Físico Usado Impecable",
     stock: 2,
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/gow-ragnarok.jpg",
     description: "Caja azul original completa con disco 10/10. Audio y subtítulos en español latino.",
     featured: true
   },
@@ -42,7 +42,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Disco 10/10",
     tag: "Físico Usado",
     stock: 3,
-    image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/fc-24.jpg",
     description: "Fútbol de nueva generación con Ultimate Team y ligas actualizadas en formato físico.",
     featured: true
   },
@@ -55,7 +55,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Caja Original",
     tag: "Físico Usado",
     stock: 1,
-    image: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/tlou2.png",
     description: "Edición estándar física en estuche original. Disco testeado sin marcas ni rayas.",
     featured: true
   },
@@ -68,7 +68,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Hits",
     tag: "Físico Usado",
     stock: 2,
-    image: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/spiderman.jpg",
     description: "Edición PlayStation Hits en caja roja/azul con manuales y disco en excelente estado.",
     featured: false
   },
@@ -81,7 +81,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Con Mapa",
     tag: "Físico Usado",
     stock: 1,
-    image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/rdr2.jpg",
     description: "Incluye los 2 discos (Data + Play) y el mapa original desplegable de New Austin.",
     featured: true
   },
@@ -94,7 +94,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Nuevo",
     tag: "Físico Nuevo Sellado",
     stock: 4,
-    image: "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/gtav.png",
     description: "Nuevo de fábrica en plástico sellado con tira PlayStation. Incluye pack de inicio criminal.",
     featured: true
   },
@@ -109,7 +109,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Caja Original",
     tag: "Físico Usado",
     stock: 2,
-    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/gtav.png",
     description: "Caja transparente original PS3 con mapa de Los Santos y disco Bluray verificado.",
     featured: true
   },
@@ -122,7 +122,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Disco 10/10",
     tag: "Físico Usado",
     stock: 1,
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/gow3.jpg",
     description: "El épico cierre de la trilogía de Kratos en el Olimpo. Disco pulcro y sin detalles.",
     featured: true
   },
@@ -135,7 +135,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Original",
     tag: "Físico Usado",
     stock: 2,
-    image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/pes2018.png",
     description: "Último gran PES para PS3 en formato disco. Ideal para jugar partidos clásicos de 2 a 4 jugadores.",
     featured: false
   },
@@ -148,7 +148,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Caja Original",
     tag: "Físico Usado",
     stock: 1,
-    image: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/tlou.jpg",
     description: "Edición original en caja con arte intacto. Testeado 100% en consola de banco de taller.",
     featured: true
   },
@@ -161,7 +161,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Disco 10/10",
     tag: "Físico Usado",
     stock: 2,
-    image: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/mk-komplete.png",
     description: "Incluye todos los personajes descargables: Freddy Krueger, Kenshi, Rain y Skarlet.",
     featured: false
   },
@@ -174,7 +174,7 @@ export const INITIAL_PRODUCTS = [
     condition: "Original",
     tag: "Físico Usado",
     stock: 3,
-    image: "https://images.unsplash.com/photo-1542751110-97427bbecf20?auto=format&fit=crop&w=600&q=80",
+    image: "/covers/cod-bo2.png",
     description: "Campaña futurista y el legendario modo Zombis en disco Bluray original.",
     featured: false
   },

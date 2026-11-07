@@ -919,6 +919,10 @@ export default function AdminDashboard({ onClose }) {
                                 src={prod.image}
                                 alt={prod.name}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80";
+                                }}
                               />
                               <div className="absolute inset-y-0 left-0 w-2.5 bg-gradient-to-r from-white/30 to-transparent pointer-events-none" />
                               
@@ -940,6 +944,10 @@ export default function AdminDashboard({ onClose }) {
                               src={prod.image}
                               alt={prod.name}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1507457379470-08b800bebc67?auto=format&fit=crop&w=800&q=80";
+                              }}
                             />
                             <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded bg-ps-bg/90 text-ps-neon border border-ps-neon/30 font-bold uppercase">
                               {prod.tag || prod.category}
@@ -1747,6 +1755,10 @@ export default function AdminDashboard({ onClose }) {
                             src={productForm.image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80'}
                             alt="Vista previa caja"
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80";
+                            }}
                           />
 
                           {/* Spine Sheen */}
@@ -1795,6 +1807,10 @@ export default function AdminDashboard({ onClose }) {
                         src={productForm.image || 'https://images.unsplash.com/photo-1507457379470-08b800bebc67?auto=format&fit=crop&w=800&q=80'}
                         alt="Vista previa consola"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1507457379470-08b800bebc67?auto=format&fit=crop&w=800&q=80";
+                        }}
                       />
                       <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded bg-black/80 text-ps-neon font-bold">
                         {productForm.category}

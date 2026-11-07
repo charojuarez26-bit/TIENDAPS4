@@ -136,6 +136,10 @@ export default function CartDrawer() {
                         src={item.image}
                         alt={item.name}
                         className="w-16 h-16 rounded-lg object-cover bg-slate-900 border border-slate-800 shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=600&q=80";
+                        }}
                       />
                     ) : (
                       <div className="w-16 h-16 rounded-lg bg-ps-blue/15 border border-ps-blue/30 flex items-center justify-center text-ps-neon shrink-0 font-gaming font-bold text-xl">
