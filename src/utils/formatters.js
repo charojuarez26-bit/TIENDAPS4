@@ -147,3 +147,91 @@ export function buildCartCheckoutWhatsAppUrl(cart, customerData, config) {
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
+
+export function formatTime(isoString) {
+  if (!isoString) return '--:--';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '--:--';
+  return date.toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }) + ' hs';
+}
+
+export function formatDateOnly(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
+export function buildCashClosureText({
+  transactions = [],
+  dateLabel = 'Hoy',
+  config = {},
+  totalEfectivo = 0,
+  totalTransferencia = 0,
+  totalGeneral = 0,
+  totalJuegos = 0,
+  countJuegos = 0,
+  totalReparaciones = 0,
+  countReparaciones = 0,
+  totalOtros = 0,
+  countOtros = 0
+}) {
+  const businessName = config.businessName || 'PlayCenter Aguilares';
+  const currentDate = new Date().toLocaleDateString('es-AR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  let text = `💰 *PLAYCENTER AGUILARES - CIERRE DE CAJA*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `📅 *Período:* ${dateLabel} (${currentDate})\n`;
+  text += `🏪 *Local:* ${businessName} (Aguilares, Tucumán)\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `💵 *TOTAL EFECTIVO (Caja Física):* ${formatARS(totalEfectivo)}\n`;
+  text += `📱 *TOTAL TRANSFERENCIAS (MP / Banco):* ${formatARS(totalTransferencia)}\n`;
+  text += `✨ *TOTAL GENERAL FACTURADO: ${formatARS(totalGeneral)}*\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `📊 *DESGLOSE POR RUBRO:*\n`;
+  text += `🎮 *Juegos Vendidos:* ${countJuegos} operaciones (${formatARS(totalJuegos)})\n`;
+  text += `🔧 *Taller y Reparaciones:* ${countReparaciones} servicios (${formatARS(totalReparaciones)})\n`;
+  if (countOtros > 0) {
+    text += `🕹️ *Consolas / Accesorios / Otros:* ${countOtros} operaciones (${formatARS(totalOtros)})\n`;
+  }
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `📝 *DETALLE DE MOVIMIENTOS (${transactions.length}):*\n`;
+
+  if (transactions.length === 0) {
+    text += `_No se registraron movimientos en este período._\n`;
+  } else {
+    transactions.forEach((tx, idx) => {
+      const timeStr = formatTime(tx.date);
+      const payIcon = tx.paymentMethod === 'Efectivo' ? '💵 [EFECTIVO]' : '📱 [TRANSF]';
+      text += `${idx + 1}. ${timeStr} • *${tx.title}* - ${formatARS(tx.amount)} ${payIcon}`;
+      if (tx.customer && tx.customer !== 'Cliente Mostrador') {
+        text += ` _(${tx.customer})_`;
+      }
+      text += `\n`;
+    });
+  }
+
+  text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `_Reporte generado automáticamente desde el Sistema de Gestión PlayCenter._`;
+
+  return text;
+}
+
+export function buildCashClosureWhatsAppUrl(params) {
+  const phone = cleanPhone(params.config?.whatsappNumber || '5493865000000');
+  const text = buildCashClosureText(params);
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}

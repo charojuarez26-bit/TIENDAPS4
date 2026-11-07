@@ -566,3 +566,152 @@ export const INITIAL_REPAIRS = [
     priority: "Normal"
   }
 ];
+
+// Helper to seed transactions dynamically relative to current date
+const getIsoDateString = (offsetDays = 0, timeStr = '12:00:00') => {
+  const d = new Date(Date.now() - offsetDays * 86400000);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${timeStr}`;
+};
+
+export const INITIAL_TRANSACTIONS = [
+  // HOY
+  {
+    id: "tx-101",
+    date: getIsoDateString(0, "10:15:00"),
+    type: "juego", // 'juego' | 'reparacion' | 'consola' | 'accesorio' | 'otro'
+    category: "Venta de Juegos",
+    title: "God of War Ragnarök (PS4)",
+    amount: 48000,
+    paymentMethod: "Efectivo", // 'Efectivo' | 'Transferencia'
+    customer: "Lucas Gómez",
+    notes: "Caja física impecable. Pago en efectivo exacto en mostrador.",
+    referenceId: "prod-ps4-1"
+  },
+  {
+    id: "tx-102",
+    date: getIsoDateString(0, "11:40:00"),
+    type: "reparacion",
+    category: "Servicio Técnico",
+    title: "Reparación Orden #102 - 2x Joysticks PS4 (Drift)",
+    amount: 28000,
+    paymentMethod: "Transferencia",
+    customer: "Martín Díaz",
+    notes: "Cambio de módulos analógicos y calibración. Transferencia por Mercado Pago verificada.",
+    referenceId: "102"
+  },
+  {
+    id: "tx-103",
+    date: getIsoDateString(0, "13:10:00"),
+    type: "juego",
+    category: "Venta de Juegos",
+    title: "EA Sports FC 24 (PS4)",
+    amount: 42000,
+    paymentMethod: "Efectivo",
+    customer: "Cliente Mostrador",
+    notes: "Juego físico usado disco 10/10.",
+    referenceId: "prod-ps4-2"
+  },
+  {
+    id: "tx-104",
+    date: getIsoDateString(0, "17:35:00"),
+    type: "accesorio",
+    category: "Consolas & Accesorios",
+    title: "Joystick DualShock 4 V2 Negro (Reacondicionado)",
+    amount: 65000,
+    paymentMethod: "Transferencia",
+    customer: "Esteban Rodríguez",
+    notes: "Pago por transferencia bancaria instantánea. Garantía 90 días.",
+    referenceId: "prod-acc-1"
+  },
+  {
+    id: "tx-105",
+    date: getIsoDateString(0, "19:20:00"),
+    type: "juego",
+    category: "Venta de Juegos",
+    title: "GTA V (PS3)",
+    amount: 18000,
+    paymentMethod: "Efectivo",
+    customer: "Nahuel Coronel",
+    notes: "Físico caja original con mapa de Los Santos.",
+    referenceId: "prod-ps3-1"
+  },
+
+  // AYER
+  {
+    id: "tx-201",
+    date: getIsoDateString(1, "10:30:00"),
+    type: "reparacion",
+    category: "Servicio Técnico",
+    title: "Mantenimiento Completo PS4 Fat (Limpieza + Arctic MX-4)",
+    amount: 25000,
+    paymentMethod: "Transferencia",
+    customer: "Rodrigo Morales",
+    notes: "Limpieza ultrasónica de turbina y disipador, cambio térmico.",
+    referenceId: "101"
+  },
+  {
+    id: "tx-202",
+    date: getIsoDateString(1, "12:15:00"),
+    type: "juego",
+    category: "Venta de Juegos",
+    title: "The Last of Us Part II (PS4)",
+    amount: 38000,
+    paymentMethod: "Efectivo",
+    customer: "Cliente Mostrador",
+    notes: "Caja original física impecable.",
+    referenceId: "prod-ps4-3"
+  },
+  {
+    id: "tx-203",
+    date: getIsoDateString(1, "18:00:00"),
+    type: "juego",
+    category: "Venta de Juegos",
+    title: "God of War III Remastered (PS4)",
+    amount: 28000,
+    paymentMethod: "Transferencia",
+    customer: "Carlos Pérez",
+    notes: "Transferencia por Cuenta DNI.",
+    referenceId: "prod-ps4-7"
+  },
+  {
+    id: "tx-204",
+    date: getIsoDateString(1, "19:45:00"),
+    type: "reparacion",
+    category: "Servicio Técnico",
+    title: "Reparación Drift Analógico DS4",
+    amount: 14000,
+    paymentMethod: "Efectivo",
+    customer: "Joaquín Benítez",
+    notes: "Reemplazo de potenciómetro izquierdo.",
+    referenceId: null
+  },
+
+  // HACE 2 DÍAS
+  {
+    id: "tx-301",
+    date: getIsoDateString(2, "11:20:00"),
+    type: "consola",
+    category: "Consolas & Accesorios",
+    title: "PlayStation 3 Super Slim 500GB con HEN + 30 Juegos",
+    amount: 210000,
+    paymentMethod: "Transferencia",
+    customer: "Matías Albornoz",
+    notes: "Consola completa con 2 joysticks y 30 juegos cargados en disco rígido.",
+    referenceId: "prod-con-ps3-1"
+  },
+  {
+    id: "tx-302",
+    date: getIsoDateString(2, "16:40:00"),
+    type: "juego",
+    category: "Venta de Juegos",
+    title: "Red Dead Redemption 2 (2 Discos Físicos)",
+    amount: 45000,
+    paymentMethod: "Efectivo",
+    customer: "Diego Valdez",
+    notes: "Edición con los 2 discos y mapa original.",
+    referenceId: "prod-ps4-5"
+  }
+];

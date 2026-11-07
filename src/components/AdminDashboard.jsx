@@ -4,9 +4,13 @@ import {
   formatARS,
   formatSimpleDate,
   getRelativeTime,
+  formatTime,
+  formatDateOnly,
   REPAIR_STATUS_CONFIG,
   buildReadyWhatsAppUrl,
   buildRepairReceiptText,
+  buildCashClosureText,
+  buildCashClosureWhatsAppUrl,
   cleanPhone
 } from '../utils/formatters';
 import { CATEGORIES, INITIAL_CONFIG } from '../data/seedData';
@@ -45,7 +49,16 @@ import {
   Copy,
   Sparkles,
   Loader2,
-  Camera
+  Camera,
+  Banknote,
+  CreditCard,
+  TrendingUp,
+  Calendar,
+  CalendarDays,
+  Receipt,
+  Wallet,
+  ArrowUpRight,
+  Share2
 } from 'lucide-react';
 import { PlayStationSymbolsRow } from './PlayStationSymbols';
 
@@ -68,11 +81,15 @@ export default function AdminDashboard({ onClose }) {
     updateRepairStatus,
     updateRepair,
     deleteRepair,
+    transactions,
+    addTransaction,
+    deleteTransaction,
+    chargeRepairOrder,
     logoutAdmin,
     showToast
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState('repairs'); // 'repairs' | 'catalog' | 'settings'
+  const [activeTab, setActiveTab] = useState('repairs'); // 'repairs' | 'finances' | 'catalog' | 'settings'
 
   // --- REPAIR TAB STATES ---
   const [repairFilterStatus, setRepairFilterStatus] = useState('ALL');
@@ -146,6 +163,39 @@ export default function AdminDashboard({ onClose }) {
     newPin: '',
     confirmPin: ''
   });
+
+  // --- FINANCES & CASH MANAGEMENT STATES ---
+  const [financeDateFilter, setFinanceDateFilter] = useState('today'); // 'today' | 'yesterday' | 'week' | 'month' | 'all' | 'custom'
+  const [customFinanceDate, setCustomFinanceDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+  const [financeSearchTerm, setFinanceSearchTerm] = useState('');
+  const [financeTypeFilter, setFinanceTypeFilter] = useState('ALL'); // 'ALL' | 'juego' | 'reparacion' | 'consola' | 'accesorio' | 'otro'
+  const [financeMethodFilter, setFinanceMethodFilter] = useState('ALL'); // 'ALL' | 'Efectivo' | 'Transferencia'
+
+  // Modal states for new sale / income
+  const [isNewSaleModalOpen, setIsNewSaleModalOpen] = useState(false);
+  const [saleForm, setSaleForm] = useState({
+    type: 'juego',
+    category: 'Venta de Juegos',
+    catalogProductId: '',
+    selectedRepairId: '',
+    title: '',
+    amount: '',
+    paymentMethod: 'Efectivo',
+    customer: 'Cliente Mostrador',
+    notes: ''
+  });
+
+  // Modal states for cash closure
+  const [isCashClosureModalOpen, setIsCashClosureModalOpen] = useState(false);
+  const [copiedClosureText, setCopiedClosureText] = useState(false);
+
+  // Modal states for charging repair order directly from Tab 1
+  const [chargingRepairOrder, setChargingRepairOrder] = useState(null);
+  const [chargeRepairMethod, setChargeRepairMethod] = useState('Efectivo');
+  const [chargeRepairAmount, setChargeRepairAmount] = useState('');
+  const [chargeRepairNotes, setChargeRepairNotes] = useState('');
 
   // ==========================================
   // REPAIR ACTIONS
@@ -245,6 +295,238 @@ export default function AdminDashboard({ onClose }) {
     listo: repairs.filter(r => r.status === 'Listo para retirar').length,
     entregado: repairs.filter(r => r.status === 'Entregado').length,
     totalFacturado: repairs.reduce((sum, r) => sum + (Number(r.cost) || 0), 0)
+  };
+
+  // ==========================================
+  // FINANCES & CASH MANAGEMENT ACTIONS
+  // ==========================================
+
+  // Date helpers
+  const isDateToday = (isoString) => {
+    if (!isoString) return false;
+    const d = new Date(isoString);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() &&
+           d.getMonth() === now.getMonth() &&
+           d.getDate() === now.getDate();
+  };
+
+  const isDateYesterday = (isoString) => {
+    if (!isoString) return false;
+    const d = new Date(isoString);
+    const y = new Date(Date.now() - 86400000);
+    return d.getFullYear() === y.getFullYear() &&
+           d.getMonth() === y.getMonth() &&
+           d.getDate() === y.getDate();
+  };
+
+  const isDateLast7Days = (isoString) => {
+    if (!isoString) return false;
+    const d = new Date(isoString);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000);
+    return d >= sevenDaysAgo;
+  };
+
+  const isDateThisMonth = (isoString) => {
+    if (!isoString) return false;
+    const d = new Date(isoString);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  };
+
+  // Transactions for the selected date period (used to compute period metrics)
+  const periodTransactions = transactions.filter(t => {
+    if (financeDateFilter === 'today') return isDateToday(t.date);
+    if (financeDateFilter === 'yesterday') return isDateYesterday(t.date);
+    if (financeDateFilter === 'week') return isDateLast7Days(t.date);
+    if (financeDateFilter === 'month') return isDateThisMonth(t.date);
+    if (financeDateFilter === 'custom') {
+      if (!customFinanceDate) return true;
+      return t.date.startsWith(customFinanceDate);
+    }
+    return true; // 'all'
+  });
+
+  // Calculate metrics for current date period
+  const periodMetrics = {
+    totalGeneral: periodTransactions.reduce((acc, t) => acc + (Number(t.amount) || 0), 0),
+    totalEfectivo: periodTransactions
+      .filter(t => t.paymentMethod === 'Efectivo')
+      .reduce((acc, t) => acc + (Number(t.amount) || 0), 0),
+    totalTransferencia: periodTransactions
+      .filter(t => t.paymentMethod === 'Transferencia')
+      .reduce((acc, t) => acc + (Number(t.amount) || 0), 0),
+    totalJuegos: periodTransactions
+      .filter(t => t.type === 'juego')
+      .reduce((acc, t) => acc + (Number(t.amount) || 0), 0),
+    countJuegos: periodTransactions.filter(t => t.type === 'juego').length,
+    totalReparaciones: periodTransactions
+      .filter(t => t.type === 'reparacion')
+      .reduce((acc, t) => acc + (Number(t.amount) || 0), 0),
+    countReparaciones: periodTransactions.filter(t => t.type === 'reparacion').length,
+    totalOtros: periodTransactions
+      .filter(t => t.type !== 'juego' && t.type !== 'reparacion')
+      .reduce((acc, t) => acc + (Number(t.amount) || 0), 0),
+    countOtros: periodTransactions.filter(t => t.type !== 'juego' && t.type !== 'reparacion').length,
+  };
+
+  periodMetrics.efectivoPercent = periodMetrics.totalGeneral > 0
+    ? Math.round((periodMetrics.totalEfectivo / periodMetrics.totalGeneral) * 100)
+    : 0;
+  periodMetrics.transferenciaPercent = periodMetrics.totalGeneral > 0
+    ? (100 - periodMetrics.efectivoPercent)
+    : 0;
+
+  // Filtered transactions for the list / table (after text search, type filter, payment method filter)
+  const filteredTransactions = periodTransactions.filter(t => {
+    if (financeTypeFilter !== 'ALL' && t.type !== financeTypeFilter) return false;
+    if (financeMethodFilter !== 'ALL' && t.paymentMethod !== financeMethodFilter) return false;
+    if (financeSearchTerm.trim()) {
+      const q = financeSearchTerm.toLowerCase();
+      const matchTitle = (t.title || '').toLowerCase().includes(q);
+      const matchCust = (t.customer || '').toLowerCase().includes(q);
+      const matchNotes = (t.notes || '').toLowerCase().includes(q);
+      const matchAmount = (t.amount || '').toString().includes(q);
+      const matchCategory = (t.category || '').toLowerCase().includes(q);
+      return matchTitle || matchCust || matchNotes || matchAmount || matchCategory;
+    }
+    return true;
+  }).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+  const getDateFilterLabel = () => {
+    if (financeDateFilter === 'today') return 'Hoy';
+    if (financeDateFilter === 'yesterday') return 'Ayer';
+    if (financeDateFilter === 'week') return 'Últimos 7 días';
+    if (financeDateFilter === 'month') return 'Este Mes';
+    if (financeDateFilter === 'custom') return `Fecha: ${customFinanceDate}`;
+    return 'Histórico Completo';
+  };
+
+  // Open modal to add sale
+  const handleOpenNewSale = (defaultType = 'juego') => {
+    setSaleForm({
+      type: defaultType,
+      category: defaultType === 'reparacion' ? 'Servicio Técnico' : defaultType === 'juego' ? 'Venta de Juegos' : 'Consolas & Accesorios',
+      catalogProductId: '',
+      selectedRepairId: '',
+      title: '',
+      amount: '',
+      paymentMethod: 'Efectivo',
+      customer: 'Cliente Mostrador',
+      notes: ''
+    });
+    setIsNewSaleModalOpen(true);
+  };
+
+  const handleSelectCatalogProduct = (prodId) => {
+    const prod = products.find(p => p.id === prodId);
+    if (prod) {
+      setSaleForm(prev => ({
+        ...prev,
+        catalogProductId: prod.id,
+        title: prod.name,
+        amount: prod.price.toString(),
+        notes: `${prod.format || ''} - ${prod.condition || ''}`.trim()
+      }));
+    }
+  };
+
+  const handleSelectPendingRepair = (repId) => {
+    const rep = repairs.find(r => r.id === repId);
+    if (rep) {
+      setSaleForm(prev => ({
+        ...prev,
+        selectedRepairId: rep.id,
+        title: `Reparación #${rep.id} - ${rep.device}`,
+        amount: rep.cost.toString(),
+        customer: rep.clientName,
+        notes: `Falla: ${rep.issue} (DNI: ${rep.dni})`
+      }));
+    }
+  };
+
+  const handleSaveSale = (e) => {
+    e.preventDefault();
+    if (!saleForm.title.trim()) {
+      showToast('Por favor escribe qué se vendió o el concepto.', 'error');
+      return;
+    }
+    if (!saleForm.amount || Number(saleForm.amount) <= 0) {
+      showToast('Por favor ingresa un monto válido.', 'error');
+      return;
+    }
+
+    addTransaction({
+      type: saleForm.type,
+      category: saleForm.category || (saleForm.type === 'reparacion' ? 'Servicio Técnico' : 'Venta de Juegos'),
+      title: saleForm.title,
+      amount: Number(saleForm.amount),
+      paymentMethod: saleForm.paymentMethod,
+      customer: saleForm.customer || 'Cliente Mostrador',
+      notes: saleForm.notes || '',
+      referenceId: saleForm.catalogProductId || saleForm.selectedRepairId || null
+    });
+
+    // If it was linked to a repair order, mark it as delivered and paid
+    if (saleForm.selectedRepairId) {
+      updateRepair(saleForm.selectedRepairId, {
+        status: 'Entregado',
+        isPaid: true,
+        paidMethod: saleForm.paymentMethod,
+        paidAmount: Number(saleForm.amount)
+      });
+    }
+
+    setIsNewSaleModalOpen(false);
+  };
+
+  // Workshop Tab: Quick Charge helper
+  const handleOpenChargeRepairModal = (repair) => {
+    setChargingRepairOrder(repair);
+    setChargeRepairMethod('Efectivo');
+    setChargeRepairAmount(repair.cost.toString());
+    setChargeRepairNotes(`Falla: ${repair.issue} | DNI: ${repair.dni}`);
+  };
+
+  const handleConfirmChargeRepair = (e) => {
+    e.preventDefault();
+    if (!chargingRepairOrder) return;
+    const amount = Number(chargeRepairAmount) || chargingRepairOrder.cost;
+    chargeRepairOrder(chargingRepairOrder.id, chargeRepairMethod, amount, chargeRepairNotes);
+    setChargingRepairOrder(null);
+  };
+
+  // Cash Closure copy helper
+  const handleCopyCashClosure = () => {
+    const text = buildCashClosureText({
+      transactions: periodTransactions,
+      dateLabel: getDateFilterLabel(),
+      config,
+      totalEfectivo: periodMetrics.totalEfectivo,
+      totalTransferencia: periodMetrics.totalTransferencia,
+      totalGeneral: periodMetrics.totalGeneral,
+      totalJuegos: periodMetrics.totalJuegos,
+      countJuegos: periodMetrics.countJuegos,
+      totalReparaciones: periodMetrics.totalReparaciones,
+      countReparaciones: periodMetrics.countReparaciones,
+      totalOtros: periodMetrics.totalOtros,
+      countOtros: periodMetrics.countOtros
+    });
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    setCopiedClosureText(true);
+    showToast('¡Resumen de Cierre de Caja copiado al portapapeles!', 'success');
+    setTimeout(() => setCopiedClosureText(false), 2500);
   };
 
   // ==========================================
@@ -553,6 +835,18 @@ export default function AdminDashboard({ onClose }) {
           </button>
 
           <button
+            onClick={() => setActiveTab('finances')}
+            className={`flex items-center gap-2 py-3 px-3 sm:px-4 border-b-2 text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'finances'
+                ? 'border-emerald-400 text-emerald-400 shadow-[0_2px_10px_rgba(52,211,153,0.3)]'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>2. Control de Caja & Dinero ({transactions.length})</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('catalog')}
             className={`flex items-center gap-2 py-3 px-3 sm:px-4 border-b-2 text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === 'catalog'
@@ -561,7 +855,7 @@ export default function AdminDashboard({ onClose }) {
             }`}
           >
             <Package className="w-4 h-4" />
-            <span>2. Catálogo & Servicios</span>
+            <span>3. Catálogo & Servicios</span>
           </button>
 
           <button
@@ -573,7 +867,7 @@ export default function AdminDashboard({ onClose }) {
             }`}
           >
             <Settings className="w-4 h-4" />
-            <span>3. Configuración del Negocio</span>
+            <span>4. Configuración del Negocio</span>
           </button>
         </div>
       </div>
@@ -777,6 +1071,23 @@ export default function AdminDashboard({ onClose }) {
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2">
+                            {/* Fast Workshop Cash Checkout Button */}
+                            {repair.isPaid ? (
+                              <span className="px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>Cobrado ({repair.paidMethod || 'Caja'}: {formatARS(repair.paidAmount || repair.cost)})</span>
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleOpenChargeRepairModal(repair)}
+                                className="px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-md shadow-amber-500/25 transition-all"
+                                title="Cobrar esta reparación y registrar automáticamente el dinero en Caja"
+                              >
+                                <DollarSign className="w-3.5 h-3.5 stroke-[2.5]" />
+                                <span>Cobrar y Pasar a Caja</span>
+                              </button>
+                            )}
+
                             {/* Quick Receipt Copy Button */}
                             <button
                               onClick={() => handleCopyReceipt(repair)}
@@ -830,7 +1141,454 @@ export default function AdminDashboard({ onClose }) {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 2: GESTIÓN DE CATÁLOGO & SERVICIOS */}
+        {/* TAB 2: CONTROL DE DINERO & CAJA DIARIA */}
+        {/* ========================================================= */}
+        {activeTab === 'finances' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header & Quick Action Buttons */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-ps-surface border border-ps-border">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="w-5 h-5 text-emerald-400" />
+                  <h2 className="text-base sm:text-lg font-bold text-white">
+                    Control de Caja & Flujo de Dinero
+                  </h2>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                    En Vivo
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Control diario de ingresos por venta de juegos y servicios de taller. Registro de Efectivo y Transferencias.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Cash Closure Button */}
+                <button
+                  onClick={() => setIsCashClosureModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-sky-400 border border-sky-500/30 hover:border-sky-500/60 shadow-sm transition-all cursor-pointer"
+                  title="Generar resumen de cierre de caja para enviar por WhatsApp"
+                >
+                  <Receipt className="w-4 h-4 text-sky-400" />
+                  <span>Cierre de Caja del Día</span>
+                </button>
+
+                {/* New Sale Button */}
+                <button
+                  onClick={() => handleOpenNewSale('juego')}
+                  className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                  <span>+ Registrar Venta / Ingreso</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Date Range Filter Bar */}
+            <div className="p-3 sm:p-4 rounded-2xl bg-ps-surface border border-ps-border space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1 mr-1">
+                    <Calendar className="w-3.5 h-3.5 text-ps-neon" />
+                    <span>Período:</span>
+                  </span>
+
+                  <button
+                    onClick={() => setFinanceDateFilter('today')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      financeDateFilter === 'today'
+                        ? 'bg-ps-blue text-white shadow-ps-glow'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                    }`}
+                  >
+                    Hoy
+                  </button>
+
+                  <button
+                    onClick={() => setFinanceDateFilter('yesterday')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      financeDateFilter === 'yesterday'
+                        ? 'bg-ps-blue text-white shadow-ps-glow'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                    }`}
+                  >
+                    Ayer
+                  </button>
+
+                  <button
+                    onClick={() => setFinanceDateFilter('week')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      financeDateFilter === 'week'
+                        ? 'bg-ps-blue text-white shadow-ps-glow'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                    }`}
+                  >
+                    Últimos 7 días
+                  </button>
+
+                  <button
+                    onClick={() => setFinanceDateFilter('month')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      financeDateFilter === 'month'
+                        ? 'bg-ps-blue text-white shadow-ps-glow'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                    }`}
+                  >
+                    Este Mes
+                  </button>
+
+                  <button
+                    onClick={() => setFinanceDateFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      financeDateFilter === 'all'
+                        ? 'bg-ps-blue text-white shadow-ps-glow'
+                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                    }`}
+                  >
+                    Todo el Histórico
+                  </button>
+                </div>
+
+                {/* Custom Date Picker */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 hidden sm:inline">Fecha exacta:</span>
+                  <input
+                    type="date"
+                    value={customFinanceDate}
+                    onChange={(e) => {
+                      setCustomFinanceDate(e.target.value);
+                      setFinanceDateFilter('custom');
+                    }}
+                    className={`px-3 py-1 rounded-xl bg-slate-900 border text-xs text-slate-200 focus:outline-none focus:border-ps-neon cursor-pointer ${
+                      financeDateFilter === 'custom' ? 'border-ps-neon text-ps-neon font-bold' : 'border-slate-800'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Status pill showing current filter */}
+              <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-ps-border/50">
+                <span>
+                  Mostrando registros de: <strong className="text-emerald-400">{getDateFilterLabel()}</strong>
+                </span>
+                <span className="font-mono text-slate-400">
+                  {periodTransactions.length} {periodTransactions.length === 1 ? 'movimiento' : 'movimientos'}
+                </span>
+              </div>
+            </div>
+
+            {/* 5 KPI Metric Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              {/* 1. Total General */}
+              <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-ps-surface border border-ps-blue/30 relative overflow-hidden shadow-lg shadow-ps-blue/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Recaudado</span>
+                  <div className="w-7 h-7 rounded-lg bg-ps-blue/20 text-ps-neon flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+                  {formatARS(periodMetrics.totalGeneral)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3 text-emerald-400" />
+                  <span>{periodTransactions.length} operaciones</span>
+                </div>
+              </div>
+
+              {/* 2. Total Efectivo */}
+              <div className="p-4 rounded-2xl bg-ps-surface border border-emerald-500/30 relative overflow-hidden shadow-lg shadow-emerald-500/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">💵 Efectivo (Caja)</span>
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                    <Banknote className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight">
+                  {formatARS(periodMetrics.totalEfectivo)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  <strong className="text-emerald-300">{periodMetrics.efectivoPercent}%</strong> del total en mano
+                </div>
+              </div>
+
+              {/* 3. Total Transferencia */}
+              <div className="p-4 rounded-2xl bg-ps-surface border border-sky-500/30 relative overflow-hidden shadow-lg shadow-sky-500/5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400">📱 Transferencias</span>
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-sky-400 font-mono tracking-tight">
+                  {formatARS(periodMetrics.totalTransferencia)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  <strong className="text-sky-300">{periodMetrics.transferenciaPercent}%</strong> MP / Banco
+                </div>
+              </div>
+
+              {/* 4. Ventas de Juegos */}
+              <div className="p-4 rounded-2xl bg-ps-surface border border-purple-500/30 relative overflow-hidden">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-purple-300">🎮 Juegos</span>
+                  <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center">
+                    <Disc3 className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+                  {formatARS(periodMetrics.totalJuegos)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  {periodMetrics.countJuegos} {periodMetrics.countJuegos === 1 ? 'juego vendido' : 'juegos vendidos'}
+                </div>
+              </div>
+
+              {/* 5. Taller y Reparaciones */}
+              <div className="p-4 rounded-2xl bg-ps-surface border border-amber-500/30 relative overflow-hidden">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300">🔧 Taller</span>
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                    <Wrench className="w-4 h-4" />
+                  </div>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+                  {formatARS(periodMetrics.totalReparaciones)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  {periodMetrics.countReparaciones} {periodMetrics.countReparaciones === 1 ? 'servicio cobrado' : 'servicios cobrados'}
+                </div>
+              </div>
+            </div>
+
+            {/* Visual Distribution Bar (Efectivo vs Transferencia) */}
+            <div className="p-4 rounded-2xl bg-ps-surface border border-ps-border space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                  <span className="text-slate-300">
+                    Efectivo: <strong className="text-emerald-400">{formatARS(periodMetrics.totalEfectivo)}</strong> ({periodMetrics.efectivoPercent}%)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-sky-400 inline-block"></span>
+                  <span className="text-slate-300">
+                    Transferencias: <strong className="text-sky-400">{formatARS(periodMetrics.totalTransferencia)}</strong> ({periodMetrics.transferenciaPercent}%)
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full h-3 rounded-full bg-slate-900 overflow-hidden flex p-0.5 border border-slate-800">
+                <div
+                  style={{ width: `${periodMetrics.efectivoPercent}%` }}
+                  className="h-full bg-emerald-500 rounded-l-full transition-all duration-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                  title={`Efectivo: ${periodMetrics.efectivoPercent}%`}
+                />
+                <div
+                  style={{ width: `${periodMetrics.transferenciaPercent}%` }}
+                  className="h-full bg-sky-400 rounded-r-full transition-all duration-500 shadow-[0_0_10px_rgba(56,189,248,0.5)]"
+                  title={`Transferencias: ${periodMetrics.transferenciaPercent}%`}
+                />
+              </div>
+            </div>
+
+            {/* Search & Secondary Filter Bar */}
+            <div className="p-4 rounded-2xl bg-ps-surface border border-ps-border flex flex-col md:flex-row items-center justify-between gap-3">
+              {/* Search bar */}
+              <div className="relative w-full md:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Buscar por juego, cliente, nota..."
+                  value={financeSearchTerm}
+                  onChange={(e) => setFinanceSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-ps-neon"
+                />
+              </div>
+
+              {/* Rubro & Payment Method Filters */}
+              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                {/* Rubro filter */}
+                <select
+                  value={financeTypeFilter}
+                  onChange={(e) => setFinanceTypeFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-ps-neon cursor-pointer"
+                >
+                  <option value="ALL">📦 Todos los Rubros</option>
+                  <option value="juego">🎮 Solo Juegos</option>
+                  <option value="reparacion">🔧 Solo Taller</option>
+                  <option value="accesorio">🕹️ Accesorios & Consolas</option>
+                </select>
+
+                {/* Method filter */}
+                <select
+                  value={financeMethodFilter}
+                  onChange={(e) => setFinanceMethodFilter(e.target.value)}
+                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-ps-neon cursor-pointer"
+                >
+                  <option value="ALL">💳 Todos los Métodos</option>
+                  <option value="Efectivo">💵 Solo Efectivo</option>
+                  <option value="Transferencia">📱 Solo Transferencia</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Transactions Feed / Table */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <PlayStationSymbolsRow className="scale-75 origin-left" />
+                  <span>Detalle de Movimientos ({filteredTransactions.length})</span>
+                </h3>
+              </div>
+
+              {filteredTransactions.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl bg-ps-surface border border-ps-border">
+                  <DollarSign className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-slate-300">
+                    No se encontraron ingresos para los filtros seleccionados.
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    Selecciona otro período o registra una nueva venta mostrador para comenzar a sumar a la caja.
+                  </p>
+                  <button
+                    onClick={() => handleOpenNewSale('juego')}
+                    className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    + Registrar Venta Ahora
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredTransactions.map((tx) => {
+                    const isEfectivo = tx.paymentMethod === 'Efectivo';
+                    const isJuego = tx.type === 'juego';
+                    const isReparacion = tx.type === 'reparacion';
+                    const isConsola = tx.type === 'consola' || tx.type === 'accesorio';
+
+                    return (
+                      <div
+                        key={tx.id}
+                        className="p-3.5 sm:p-4 rounded-2xl bg-ps-surface border border-ps-border hover:border-slate-700 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                      >
+                        {/* Left: Time, Icon, Title and Details */}
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          {/* Icon badge */}
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                              isJuego
+                                ? 'bg-ps-blue/20 text-ps-neon border border-ps-blue/30'
+                                : isReparacion
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : isConsola
+                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            }`}
+                          >
+                            {isJuego && <Disc3 className="w-5 h-5" />}
+                            {isReparacion && <Wrench className="w-5 h-5" />}
+                            {isConsola && <Gamepad className="w-5 h-5" />}
+                            {!isJuego && !isReparacion && !isConsola && <DollarSign className="w-5 h-5" />}
+                          </div>
+
+                          {/* Info */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                              <span className="text-[11px] font-mono text-slate-400">
+                                {formatTime(tx.date)}
+                              </span>
+                              <span className="text-[10px] text-slate-500">•</span>
+                              <span className="text-[11px] text-slate-400">
+                                {formatSimpleDate(tx.date)}
+                              </span>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                  isJuego
+                                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                    : isReparacion
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                    : isConsola
+                                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                                }`}
+                              >
+                                {tx.category || (isJuego ? 'Juegos' : isReparacion ? 'Taller' : 'Accesorios')}
+                              </span>
+                            </div>
+
+                            <h4 className="text-sm font-bold text-white truncate group-hover:text-ps-neon transition-colors">
+                              {tx.title}
+                            </h4>
+
+                            <div className="text-xs text-slate-400 flex flex-wrap items-center gap-2 mt-0.5">
+                              {tx.customer && tx.customer !== 'Cliente Mostrador' && (
+                                <span className="text-slate-300">
+                                  Cliente: <strong>{tx.customer}</strong>
+                                </span>
+                              )}
+                              {tx.notes && (
+                                <span className="text-slate-500 italic truncate max-w-md">
+                                  {tx.notes}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Payment Method Badge, Amount & Actions */}
+                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-ps-border/50 shrink-0">
+                          {/* Payment Method Pill */}
+                          <div
+                            className={`px-2.5 py-1 rounded-xl text-xs font-bold border flex items-center gap-1.5 ${
+                              isEfectivo
+                                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm shadow-emerald-500/10'
+                                : 'bg-sky-500/15 text-sky-400 border-sky-500/40 shadow-sm shadow-sky-500/10'
+                            }`}
+                          >
+                            {isEfectivo ? (
+                              <>
+                                <Banknote className="w-3.5 h-3.5" />
+                                <span>💵 Efectivo</span>
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="w-3.5 h-3.5" />
+                                <span>📱 Transferencia</span>
+                              </>
+                            )}
+                          </div>
+
+                          {/* Amount */}
+                          <div className="text-right">
+                            <div className="text-base sm:text-lg font-black text-emerald-400 font-mono tracking-tight">
+                              +{formatARS(tx.amount)}
+                            </div>
+                          </div>
+
+                          {/* Delete action */}
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`¿Anular/eliminar este ingreso de ${formatARS(tx.amount)} (${tx.title})?`)) {
+                                deleteTransaction(tx.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/40 text-slate-500 hover:text-rose-400 border border-slate-800 transition-colors cursor-pointer"
+                            title="Eliminar movimiento de caja"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 3: GESTIÓN DE CATÁLOGO & SERVICIOS */}
         {/* ========================================================= */}
         {activeTab === 'catalog' && (
           <div className="space-y-6 animate-fadeIn">
@@ -1954,6 +2712,525 @@ export default function AdminDashboard({ onClose }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: REGISTRAR VENTA / INGRESO DE CAJA */}
+      {/* ========================================================= */}
+      {isNewSaleModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-ps-surface border border-ps-border rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-ps-border mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Registrar Ingreso en Caja</h3>
+                  <p className="text-xs text-slate-400">Suma inmediatamente al total del día</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsNewSaleModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSale} className="space-y-4">
+              {/* Type Switcher */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  ¿Qué estás cobrando?
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm(prev => ({ ...prev, type: 'juego', category: 'Venta de Juegos', catalogProductId: '', selectedRepairId: '' }))}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                      saleForm.type === 'juego'
+                        ? 'bg-ps-blue/20 text-ps-neon border-ps-neon shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Disc3 className="w-4 h-4" />
+                    <span>Juego</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm(prev => ({ ...prev, type: 'reparacion', category: 'Servicio Técnico', catalogProductId: '', selectedRepairId: '' }))}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                      saleForm.type === 'reparacion'
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-500 shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Wrench className="w-4 h-4" />
+                    <span>Taller</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm(prev => ({ ...prev, type: 'accesorio', category: 'Consolas & Accesorios', catalogProductId: '', selectedRepairId: '' }))}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                      saleForm.type === 'accesorio' || saleForm.type === 'consola'
+                        ? 'bg-purple-500/20 text-purple-400 border-purple-500 shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Gamepad className="w-4 h-4" />
+                    <span>Accesorio</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm(prev => ({ ...prev, type: 'otro', category: 'Otros Ingresos', catalogProductId: '', selectedRepairId: '' }))}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                      saleForm.type === 'otro'
+                        ? 'bg-slate-800 text-white border-slate-600 shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <DollarSign className="w-4 h-4" />
+                    <span>Varios</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Fast Selector from Catalog (if Game) */}
+              {saleForm.type === 'juego' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Cargar juego rápido del catálogo (opcional)
+                  </label>
+                  <select
+                    value={saleForm.catalogProductId}
+                    onChange={(e) => handleSelectCatalogProduct(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-ps-neon cursor-pointer"
+                  >
+                    <option value="">-- Seleccionar juego del catálogo --</option>
+                    {products.filter(p => p.category === 'juegos_ps4' || p.category === 'juegos_ps3').map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.category === 'juegos_ps4' ? '🎮 [PS4]' : '🎮 [PS3]'} {p.name} - {formatARS(p.price)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Fast Selector from Workshop (if Repair) */}
+              {saleForm.type === 'reparacion' && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Vincular orden de taller (opcional)
+                  </label>
+                  <select
+                    value={saleForm.selectedRepairId}
+                    onChange={(e) => handleSelectPendingRepair(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-ps-neon cursor-pointer"
+                  >
+                    <option value="">-- Seleccionar orden pendiente --</option>
+                    {repairs.filter(r => !r.isPaid).map(r => (
+                      <option key={r.id} value={r.id}>
+                        🔧 Orden #{r.id} - {r.clientName} ({r.device}) - {formatARS(r.cost)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Title / Description */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Concepto / ¿Qué se vendió o cobró? *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: God of War Ragnarök (PS4) / Mantenimiento PS4"
+                  value={saleForm.title}
+                  onChange={(e) => setSaleForm(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-ps-neon"
+                />
+              </div>
+
+              {/* Amount ($ ARS) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Monto Cobrado (ARS) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs">$</span>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="45000"
+                    value={saleForm.amount}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full pl-7 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm font-black font-mono text-emerald-400 placeholder-slate-600 focus:outline-none focus:border-ps-neon"
+                  />
+                </div>
+                {saleForm.amount && Number(saleForm.amount) > 0 && (
+                  <p className="text-[11px] text-emerald-400 font-mono mt-1">
+                    Equivale a: <strong>{formatARS(Number(saleForm.amount))}</strong>
+                  </p>
+                )}
+              </div>
+
+              {/* Payment Method Selector (Big Cards) */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Método de Pago *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm(prev => ({ ...prev, paymentMethod: 'Efectivo' }))}
+                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      saleForm.paymentMethod === 'Efectivo'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-md shadow-emerald-500/10 font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Banknote className="w-4 h-4" />
+                    <span className="text-xs">💵 Efectivo (Caja)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSaleForm(prev => ({ ...prev, paymentMethod: 'Transferencia' }))}
+                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      saleForm.paymentMethod === 'Transferencia'
+                        ? 'bg-sky-500/20 text-sky-400 border-sky-500 shadow-md shadow-sky-500/10 font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span className="text-xs">📱 Transferencia (MP/Banco)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Customer Name & Notes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Nombre del Cliente
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Cliente Mostrador"
+                    value={saleForm.customer}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, customer: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-ps-neon"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Notas adicionales (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Con mapa / Garantía 30 días"
+                    value={saleForm.notes}
+                    onChange={(e) => setSaleForm(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-ps-neon"
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-ps-border">
+                <button
+                  type="button"
+                  onClick={() => setIsNewSaleModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-semibold cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                >
+                  Guardar en Caja
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: COBRAR ORDEN DE TALLER Y PASAR A CAJA */}
+      {/* ========================================================= */}
+      {chargingRepairOrder && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-ps-surface border border-ps-border rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-ps-border mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Cobrar Orden #{chargingRepairOrder.id}
+                  </h3>
+                  <p className="text-xs text-slate-400">Registrar cobro directo en la caja de hoy</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setChargingRepairOrder(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmChargeRepair} className="space-y-4">
+              {/* Order summary info */}
+              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1 text-xs">
+                <div className="flex justify-between text-slate-300">
+                  <span>Cliente:</span>
+                  <strong className="text-white">{chargingRepairOrder.clientName}</strong>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Equipo:</span>
+                  <span className="text-slate-200">{chargingRepairOrder.device}</span>
+                </div>
+                <div className="flex justify-between text-slate-300">
+                  <span>Falla:</span>
+                  <span className="text-slate-400 truncate max-w-[200px]">{chargingRepairOrder.issue}</span>
+                </div>
+              </div>
+
+              {/* Amount to charge */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Monto a Cobrar ($ ARS)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs">$</span>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={chargeRepairAmount}
+                    onChange={(e) => setChargeRepairAmount(e.target.value)}
+                    className="w-full pl-7 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-sm font-black font-mono text-emerald-400 focus:outline-none focus:border-ps-neon"
+                  />
+                </div>
+                <p className="text-[11px] text-emerald-400 font-mono mt-1">
+                  Total: <strong>{formatARS(Number(chargeRepairAmount) || chargingRepairOrder.cost)}</strong>
+                </p>
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  ¿Cómo pagó el cliente? *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setChargeRepairMethod('Efectivo')}
+                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      chargeRepairMethod === 'Efectivo'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-md font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Banknote className="w-4 h-4" />
+                    <span className="text-xs">💵 Efectivo</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setChargeRepairMethod('Transferencia')}
+                    className={`p-3 rounded-xl border flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      chargeRepairMethod === 'Transferencia'
+                        ? 'bg-sky-500/20 text-sky-400 border-sky-500 shadow-md font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span className="text-xs">📱 Transferencia / MP</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Notas / Observación del cobro
+                </label>
+                <input
+                  type="text"
+                  value={chargeRepairNotes}
+                  onChange={(e) => setChargeRepairNotes(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-ps-neon"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-ps-border">
+                <button
+                  type="button"
+                  onClick={() => setChargingRepairOrder(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white text-xs font-semibold cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/25 transition-all cursor-pointer"
+                >
+                  Confirmar Cobro e Ingresar a Caja
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL: CIERRE DE CAJA DEL DÍA */}
+      {/* ========================================================= */}
+      {isCashClosureModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-ps-surface border border-ps-border rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-ps-border mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                  <Receipt className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Cierre de Caja Diario</h3>
+                  <p className="text-xs text-slate-400">Resumen listo para enviar por WhatsApp</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCashClosureModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Structured Report Preview */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 space-y-3 max-h-72 overflow-y-auto">
+              <div className="text-center font-bold text-white pb-2 border-b border-slate-800">
+                💰 PLAYCENTER AGUILARES - CIERRE DE CAJA
+                <div className="text-[11px] text-ps-neon font-normal mt-0.5">
+                  {getDateFilterLabel()} • {formatDateOnly(new Date())}
+                </div>
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-emerald-400 font-bold">💵 Total Efectivo (Caja):</span>
+                  <span className="font-bold text-emerald-400">{formatARS(periodMetrics.totalEfectivo)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sky-400 font-bold">📱 Total Transferencias (MP/Banco):</span>
+                  <span className="font-bold text-sky-400">{formatARS(periodMetrics.totalTransferencia)}</span>
+                </div>
+                <div className="flex justify-between pt-1 border-t border-slate-800 text-sm">
+                  <span className="text-white font-black">✨ TOTAL FACTURADO:</span>
+                  <span className="font-black text-white text-base">{formatARS(periodMetrics.totalGeneral)}</span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800 text-[11px] space-y-1 text-slate-400">
+                <div className="text-slate-300 font-bold mb-1">📊 Desglose por Rubro:</div>
+                <div className="flex justify-between">
+                  <span>🎮 Juegos Vendidos:</span>
+                  <span>{periodMetrics.countJuegos} ops ({formatARS(periodMetrics.totalJuegos)})</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>🔧 Taller / Reparaciones:</span>
+                  <span>{periodMetrics.countReparaciones} ops ({formatARS(periodMetrics.totalReparaciones)})</span>
+                </div>
+                {periodMetrics.countOtros > 0 && (
+                  <div className="flex justify-between">
+                    <span>🕹️ Consolas / Accesorios:</span>
+                    <span>{periodMetrics.countOtros} ops ({formatARS(periodMetrics.totalOtros)})</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+                <div className="text-slate-300 font-bold mb-1">📝 Movimientos ({periodTransactions.length}):</div>
+                {periodTransactions.length === 0 ? (
+                  <p className="italic text-slate-500">Sin movimientos registrados en este período.</p>
+                ) : (
+                  <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+                    {periodTransactions.map((tx, idx) => (
+                      <div key={tx.id} className="flex justify-between items-center text-[10px]">
+                        <span className="truncate max-w-[200px]">
+                          {idx + 1}. {formatTime(tx.date)} {tx.title}
+                        </span>
+                        <span className="shrink-0 font-bold text-slate-200">
+                          {formatARS(tx.amount)} [{tx.paymentMethod === 'Efectivo' ? 'EFECT' : 'TRANSF'}]
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-4 border-t border-ps-border mt-4">
+              <button
+                type="button"
+                onClick={handleCopyCashClosure}
+                className={`w-full sm:flex-1 py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  copiedClosureText
+                    ? 'bg-emerald-500 text-slate-950 font-black'
+                    : 'bg-ps-blue/20 hover:bg-ps-blue/30 text-ps-neon border border-ps-blue/40 shadow-ps-glow'
+                }`}
+              >
+                {copiedClosureText ? (
+                  <>
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>¡Copiado para WhatsApp!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    <span>Copiar Resumen para WhatsApp</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                href={buildCashClosureWhatsAppUrl({
+                  transactions: periodTransactions,
+                  dateLabel: getDateFilterLabel(),
+                  config,
+                  totalEfectivo: periodMetrics.totalEfectivo,
+                  totalTransferencia: periodMetrics.totalTransferencia,
+                  totalGeneral: periodMetrics.totalGeneral,
+                  totalJuegos: periodMetrics.totalJuegos,
+                  countJuegos: periodMetrics.countJuegos,
+                  totalReparaciones: periodMetrics.totalReparaciones,
+                  countReparaciones: periodMetrics.countReparaciones,
+                  totalOtros: periodMetrics.totalOtros,
+                  countOtros: periodMetrics.countOtros
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Abrir WhatsApp</span>
+              </a>
+            </div>
           </div>
         </div>
       )}

@@ -3,8 +3,10 @@ import {
   INITIAL_CONFIG,
   INITIAL_PRODUCTS,
   INITIAL_SERVICES,
-  INITIAL_REPAIRS
+  INITIAL_REPAIRS,
+  INITIAL_TRANSACTIONS
 } from '../data/seedData';
+import { formatARS } from '../utils/formatters';
 
 const AppContext = createContext();
 
@@ -13,6 +15,7 @@ const STORAGE_KEYS = {
   PRODUCTS: 'playcenter_products_v4',
   SERVICES: 'playcenter_services_v2',
   REPAIRS: 'playcenter_repairs_v2',
+  TRANSACTIONS: 'playcenter_transactions_v2',
   CART: 'playcenter_cart_v2',
   AUTH: 'playcenter_admin_auth_v2',
 };
@@ -100,6 +103,21 @@ export function AppProvider({ children }) {
     }
   });
 
+  // Load or seed cash & sales transactions
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_TRANSACTIONS));
+      return INITIAL_TRANSACTIONS;
+    } catch (e) {
+      console.error('Error loading transactions:', e);
+      return INITIAL_TRANSACTIONS;
+    }
+  });
+
   // Load or init cart
   const [cart, setCart] = useState(() => {
     try {
@@ -159,6 +177,14 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     try {
+      localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
+    } catch (e) {
+      console.error('Failed to save transactions', e);
+    }
+  }, [transactions]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
     } catch (e) {
       console.error('Failed to save cart', e);
@@ -203,6 +229,7 @@ export function AppProvider({ children }) {
     setProducts(INITIAL_PRODUCTS);
     setServices(INITIAL_SERVICES);
     setRepairs(INITIAL_REPAIRS);
+    setTransactions(INITIAL_TRANSACTIONS);
     setCart([]);
     localStorage.clear();
     showToast('Datos restablecidos a los valores originales de fábrica.', 'info');
@@ -325,6 +352,69 @@ export function AppProvider({ children }) {
     return repairs.filter(r => r.dni.replace(/[^0-9]/g, '') === cleanDni);
   };
 
+  // Transaction / Cash Management Methods
+  const addTransaction = (data) => {
+    const newTx = {
+      id: `tx-${Date.now()}`,
+      date: data.date || new Date().toISOString(),
+      type: data.type || 'juego',
+      category: data.category || (data.type === 'reparacion' ? 'Servicio Técnico' : 'Venta de Juegos'),
+      title: data.title || 'Venta Mostrador',
+      amount: Number(data.amount) || 0,
+      paymentMethod: data.paymentMethod === 'Transferencia' ? 'Transferencia' : 'Efectivo',
+      customer: data.customer?.trim() || 'Cliente Mostrador',
+      notes: data.notes?.trim() || '',
+      referenceId: data.referenceId || null
+    };
+
+    setTransactions(prev => [newTx, ...prev]);
+    showToast(`Ingreso de ${formatARS(newTx.amount)} registrado en Caja (${newTx.paymentMethod}).`, 'success');
+    return newTx;
+  };
+
+  const deleteTransaction = (id) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    showToast('Movimiento de caja eliminado.', 'info');
+  };
+
+  const chargeRepairOrder = (repairId, paymentMethod = 'Efectivo', customAmount = null, customNotes = '') => {
+    const repair = repairs.find(r => r.id === repairId);
+    if (!repair) {
+      showToast('Orden de reparación no encontrada.', 'error');
+      return null;
+    }
+
+    const amount = customAmount !== null && customAmount !== undefined && customAmount !== '' ? Number(customAmount) : Number(repair.cost);
+    const newTx = {
+      id: `tx-${Date.now()}`,
+      date: new Date().toISOString(),
+      type: 'reparacion',
+      category: 'Servicio Técnico',
+      title: `Cobro Taller Orden #${repair.id} - ${repair.device}`,
+      amount: amount || 0,
+      paymentMethod: paymentMethod === 'Transferencia' ? 'Transferencia' : 'Efectivo',
+      customer: repair.clientName || 'Cliente Taller',
+      notes: customNotes || `Falla: ${repair.issue} | DNI: ${repair.dni}`,
+      referenceId: repair.id
+    };
+
+    // Mark repair as delivered and paid
+    setRepairs(prev =>
+      prev.map(r => r.id === repairId ? {
+        ...r,
+        status: 'Entregado',
+        isPaid: true,
+        paidMethod: paymentMethod,
+        paidAmount: amount,
+        paidDate: new Date().toISOString()
+      } : r)
+    );
+
+    setTransactions(prev => [newTx, ...prev]);
+    showToast(`Orden #${repairId} cobrada: ${formatARS(amount)} en ${paymentMethod}.`, 'success');
+    return newTx;
+  };
+
   // Cart Methods
   const addToCart = (item, isService = false) => {
     setCart(prev => {
@@ -398,6 +488,10 @@ export function AppProvider({ children }) {
         updateRepair,
         deleteRepair,
         getRepairsByDni,
+        transactions,
+        addTransaction,
+        deleteTransaction,
+        chargeRepairOrder,
         cart,
         addToCart,
         removeFromCart,
