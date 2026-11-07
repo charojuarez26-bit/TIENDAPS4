@@ -2,7 +2,7 @@ import React from 'react';
 import { Gamepad2, Wrench, ShieldCheck, Zap, Sparkles, ChevronDown, Award } from 'lucide-react';
 import { PlayStationSymbolsRow, PsTriangle, PsCircle, PsCross, PsSquare } from './PlayStationSymbols';
 
-export default function Hero({ onScrollToSection }) {
+export default function Hero({ onScrollToSection, onOpenFullCatalog }) {
   return (
     <section id="hero" className="relative pt-8 pb-16 md:pt-16 md:pb-24 overflow-hidden">
       {/* Background Glows & Ambient lights */}
@@ -49,11 +49,11 @@ export default function Hero({ onScrollToSection }) {
         {/* CTAs */}
         <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
           <button
-            onClick={() => onScrollToSection('catalogo')}
-            className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white font-bold text-sm tracking-wide shadow-ps-glow transition-all duration-200 flex items-center justify-center gap-2 group"
+            onClick={() => onOpenFullCatalog ? onOpenFullCatalog() : onScrollToSection('catalogo')}
+            className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white font-bold text-sm tracking-wide shadow-ps-glow transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
           >
             <Gamepad2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            <span>EXPLORAR CATÁLOGO</span>
+            <span>VER CATÁLOGO COMPLETO</span>
           </button>
 
           <button

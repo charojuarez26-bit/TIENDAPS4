@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { MapPin, Phone, Clock, MessageSquare, ShieldCheck, Heart, Lock } from 'lucide-react';
 import { PlayStationSymbolsRow } from './PlayStationSymbols';
 
-export default function Footer({ onOpenAdmin, onScrollToSection }) {
+export default function Footer({ onOpenAdmin, onScrollToSection, onOpenFullCatalog }) {
   const { config, isAdmin } = useApp();
 
   return (
@@ -45,16 +45,24 @@ export default function Footer({ onOpenAdmin, onScrollToSection }) {
             <ul className="space-y-2">
               <li>
                 <button
-                  onClick={() => onScrollToSection('catalogo')}
-                  className="hover:text-ps-neon transition-colors"
+                  onClick={() => onOpenFullCatalog ? onOpenFullCatalog() : onScrollToSection('catalogo')}
+                  className="hover:text-ps-neon transition-colors font-bold text-ps-blueLight flex items-center gap-1 cursor-pointer"
                 >
-                  🎮 Catálogo de Juegos y Consolas
+                  <span>✨ Catálogo Completo Exclusivo</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onScrollToSection('catalogo')}
+                  className="hover:text-ps-neon transition-colors cursor-pointer"
+                >
+                  🎮 Juegos Destacados y Consolas
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => onScrollToSection('servicios')}
-                  className="hover:text-ps-neon transition-colors"
+                  className="hover:text-ps-neon transition-colors cursor-pointer"
                 >
                   🛠️ Mantenimiento y Servicio Técnico
                 </button>
@@ -62,7 +70,7 @@ export default function Footer({ onOpenAdmin, onScrollToSection }) {
               <li>
                 <button
                   onClick={() => onScrollToSection('tracking')}
-                  className="hover:text-ps-neon transition-colors"
+                  className="hover:text-ps-neon transition-colors cursor-pointer"
                 >
                   🔍 Seguimiento de Reparación por DNI
                 </button>
@@ -70,7 +78,7 @@ export default function Footer({ onOpenAdmin, onScrollToSection }) {
               <li>
                 <button
                   onClick={onOpenAdmin}
-                  className="text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+                  className="text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <Lock className="w-3 h-3" /> Panel de Control Taller (PIN)
                 </button>

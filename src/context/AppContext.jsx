@@ -10,7 +10,7 @@ const AppContext = createContext();
 
 const STORAGE_KEYS = {
   CONFIG: 'playcenter_config_v2',
-  PRODUCTS: 'playcenter_products_v3',
+  PRODUCTS: 'playcenter_products_v4',
   SERVICES: 'playcenter_services_v2',
   REPAIRS: 'playcenter_repairs_v2',
   CART: 'playcenter_cart_v2',
@@ -29,30 +29,48 @@ export function AppProvider({ children }) {
     }
   });
 
-  // Load or seed products with migration for real game covers
+  // Load or seed products with seamless migration for real game covers & expanded catalog
   const [products, setProducts] = useState(() => {
     try {
-      // Check v3 first, then check v2 for upgrade
-      const savedV3 = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-      if (savedV3) {
-        return JSON.parse(savedV3);
+      const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Ensure all new seed games are present
+        const existingIds = new Set(parsed.map((p) => p.id));
+        const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
       }
 
-      const savedV2 = localStorage.getItem('playcenter_products_v2');
-      if (savedV2) {
-        const parsedV2 = JSON.parse(savedV2);
-        // Replace old unsplash placeholders with authentic real covers
-        const upgraded = parsedV2.map((prod) => {
-          const match = INITIAL_PRODUCTS.find((p) => p.id === prod.id);
-          if (match && match.image.startsWith('/covers/')) {
-            return { ...prod, image: match.image };
-          }
-          return prod;
-        });
-        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(upgraded));
-        return upgraded;
+      // Check older versions v3/v2 to preserve custom user edits and upgrade covers
+      const olderSaved = localStorage.getItem('playcenter_products_v3') || localStorage.getItem('playcenter_products_v2');
+      if (olderSaved) {
+        try {
+          const parsedOlder = JSON.parse(olderSaved);
+          const existingIds = new Set(parsedOlder.map((p) => p.id));
+          const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
+          const upgraded = [
+            ...parsedOlder.map((prod) => {
+              const seedMatch = INITIAL_PRODUCTS.find((p) => p.id === prod.id);
+              if (seedMatch && seedMatch.image.startsWith('/covers/')) {
+                return { ...prod, image: seedMatch.image };
+              }
+              return prod;
+            }),
+            ...missing
+          ];
+          localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(upgraded));
+          return upgraded;
+        } catch (err) {
+          console.error('Error migrating older products:', err);
+        }
       }
 
+      localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(INITIAL_PRODUCTS));
       return INITIAL_PRODUCTS;
     } catch (e) {
       console.error('Error loading products:', e);

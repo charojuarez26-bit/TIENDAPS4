@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/seedData';
 import { formatARS } from '../utils/formatters';
-import { Search, ShoppingBag, Check, SlidersHorizontal, Disc3, Gamepad, Tv, Cpu, Headphones, Sparkles, AlertCircle, Info } from 'lucide-react';
+import { Search, ShoppingBag, Check, SlidersHorizontal, Disc3, Gamepad, Tv, Cpu, Headphones, Sparkles, AlertCircle, Info, ArrowRight } from 'lucide-react';
 import { PlayStationSymbolsRow } from './PlayStationSymbols';
 import PhysicalGameBox from './PhysicalGameBox';
 
@@ -14,7 +14,7 @@ const ICON_MAP = {
   Headphones: Headphones
 };
 
-export default function CatalogSection() {
+export default function CatalogSection({ onOpenFullCatalog }) {
   const { products, addToCart } = useApp();
   const [activeCategory, setActiveCategory] = useState('juegos_ps4');
   const [searchQuery, setSearchQuery] = useState('');
@@ -248,18 +248,23 @@ export default function CatalogSection() {
 
         {/* Informative Retail Header Banner for Games */}
         {isGameCategory && (
-          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-[#0070d1]/15 via-ps-surface to-slate-900 border border-[#0070d1]/40 flex items-center justify-between gap-3">
+          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-[#0070d1]/15 via-ps-surface to-slate-900 border border-[#0070d1]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-[#0070d1] text-white flex items-center justify-center font-bold text-sm shrink-0 font-gaming shadow-md">
                 {activeCategory === 'juegos_ps4' ? 'PS4' : 'PS3'}
               </div>
               <div className="text-xs sm:text-sm text-slate-200">
-                <span className="font-bold text-white">Estuches y Cajas Físicas Blu-ray Originales</span> • Verificados y pulidos en banco de trabajo.
+                <span className="font-bold text-white">Selección Destacada</span> • Mostrando {Math.min(6, filteredProducts.length)} de {filteredProducts.length} títulos disponibles en local.
               </div>
             </div>
-            <span className="hidden sm:inline text-[11px] font-bold text-[#ffe600] bg-black/40 px-2.5 py-1 rounded border border-yellow-500/40">
-              🏷️ PRECIOS OFERTA RETAIL
-            </span>
+            
+            <button
+              onClick={() => onOpenFullCatalog && onOpenFullCatalog(activeCategory)}
+              className="text-xs font-bold text-ps-neon hover:text-white flex items-center gap-1.5 self-start sm:self-auto px-3 py-1.5 rounded-lg bg-ps-blue/20 border border-ps-neon/40 hover:bg-ps-blue/40 transition-colors"
+            >
+              <span>Ver Todos ({products.filter(p => p.category === activeCategory).length} títulos)</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
@@ -280,17 +285,43 @@ export default function CatalogSection() {
           </div>
         ) : isGameCategory ? (
           /* ======================================================== */
-          /* 1. DENSE GRID OF PHYSICAL BLU-RAY BOXES (2 to 5 columns) */
+          /* 1. DENSE GRID OF PHYSICAL BLU-RAY BOXES (Top 6 Featured) */
           /* ======================================================== */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 animate-fadeIn">
-            {filteredProducts.map(product => (
-              <PhysicalGameBox
-                key={product.id}
-                product={product}
-                onAddToCart={(prod) => addToCart(prod, false)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 animate-fadeIn">
+              {filteredProducts.slice(0, 6).map(product => (
+                <PhysicalGameBox
+                  key={product.id}
+                  product={product}
+                  onAddToCart={(prod) => addToCart(prod, false)}
+                />
+              ))}
+            </div>
+
+            {/* CTA to Full Catalog */}
+            <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-ps-surface via-slate-900 to-ps-surface border border-ps-blue/40 relative overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="relative z-10 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 text-ps-neon text-xs font-bold uppercase tracking-wider mb-2">
+                  <Sparkles className="w-4 h-4 text-ps-neon animate-spin-slow" />
+                  <span>Catálogo Extendido Disponible</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold font-gaming text-white">
+                  ¿QUERÉS VER TODOS LOS JUEGOS?
+                </h3>
+                <p className="text-slate-300 text-sm mt-1 max-w-xl">
+                  En nuestra página exclusiva de Catálogo Completo podés buscar entre más de {products.length} videojuegos físicos de PS4 y PS3, consolas selladas y accesorios con stock en vivo.
+                </p>
+              </div>
+
+              <button
+                onClick={() => onOpenFullCatalog && onOpenFullCatalog(activeCategory)}
+                className="shrink-0 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-ps-blue to-ps-blueLight text-white font-extrabold text-xs sm:text-sm shadow-ps-glow hover:shadow-ps-glowLg hover:scale-105 transition-all flex items-center gap-2 group cursor-pointer"
+              >
+                <span>VER CATÁLOGO COMPLETO ({products.length} ÍTEMS)</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </>
         ) : (
           /* ======================================================== */
           /* 2. WIDE CARDS FOR CONSOLES AND ACCESSORIES              */

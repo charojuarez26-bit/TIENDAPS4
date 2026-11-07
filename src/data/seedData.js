@@ -70,7 +70,7 @@ export const INITIAL_PRODUCTS = [
     stock: 2,
     image: "/covers/spiderman.jpg",
     description: "Edición PlayStation Hits en caja roja/azul con manuales y disco en excelente estado.",
-    featured: false
+    featured: true
   },
   {
     id: "prod-ps4-5",
@@ -97,6 +97,110 @@ export const INITIAL_PRODUCTS = [
     image: "/covers/gtav.png",
     description: "Nuevo de fábrica en plástico sellado con tira PlayStation. Incluye pack de inicio criminal.",
     featured: true
+  },
+  {
+    id: "prod-ps4-7",
+    name: "Uncharted 4: A Thief's End",
+    category: "juegos_ps4",
+    price: 28000,
+    format: "Físico Usado",
+    condition: "Hits Impecable",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/uncharted4.jpg",
+    description: "La despedida de Nathan Drake con gráficos cinematográficos y disco verificado.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-8",
+    name: "Bloodborne",
+    category: "juegos_ps4",
+    price: 30000,
+    format: "Físico Usado",
+    condition: "Caja Original",
+    tag: "Físico Usado",
+    stock: 1,
+    image: "/covers/bloodborne.jpg",
+    description: "Obra maestra de FromSoftware en caja original. Disco 10 de 10.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-9",
+    name: "Horizon Zero Dawn Complete Edition",
+    category: "juegos_ps4",
+    price: 26000,
+    format: "Físico Usado",
+    condition: "Complete Edition",
+    tag: "Físico Usado",
+    stock: 3,
+    image: "/covers/horizon.jpg",
+    description: "Incluye la expansión The Frozen Wilds y contenidos extra en disco.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-10",
+    name: "Resident Evil 4 Remake",
+    category: "juegos_ps4",
+    price: 46000,
+    format: "Físico Usado",
+    condition: "Disco 10/10",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/re4.jpg",
+    description: "El aclamado survival horror reimaginado para PS4 con gráficos y jugabilidad de nueva era.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-11",
+    name: "Ghost of Tsushima",
+    category: "juegos_ps4",
+    price: 39000,
+    format: "Físico Usado",
+    condition: "Caja Original",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/ghost.jpg",
+    description: "Aventura samurai de mundo abierto en Japón feudal con voces en japonés o latino.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-12",
+    name: "Elden Ring",
+    category: "juegos_ps4",
+    price: 49000,
+    format: "Físico Usado Impecable",
+    condition: "Disco 10/10",
+    tag: "Físico Usado Impecable",
+    stock: 1,
+    image: "/covers/eldenring.jpg",
+    description: "Juego del Año (GOTY). Mundo abierto épico de Hidetaka Miyazaki y George R.R. Martin.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-13",
+    name: "Crash Bandicoot N. Sane Trilogy",
+    category: "juegos_ps4",
+    price: 34000,
+    format: "Físico Usado",
+    condition: "3 Juegos en 1",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/crash.jpg",
+    description: "Tres aventuras clásicas remasterizadas en alta definición para toda la familia.",
+    featured: false
+  },
+  {
+    id: "prod-ps4-14",
+    name: "God of War (2018)",
+    category: "juegos_ps4",
+    price: 29000,
+    format: "Físico Usado",
+    condition: "PlayStation Hits",
+    tag: "Físico Usado",
+    stock: 3,
+    image: "/covers/gow2018.jpg",
+    description: "El inicio del viaje nórdico de Kratos y Atreus. Galardonado como Mejor Juego del Año.",
+    featured: false
   },
 
   // 2. JUEGOS PS3 (FÍSICOS)
@@ -137,7 +241,7 @@ export const INITIAL_PRODUCTS = [
     stock: 2,
     image: "/covers/pes2018.png",
     description: "Último gran PES para PS3 en formato disco. Ideal para jugar partidos clásicos de 2 a 4 jugadores.",
-    featured: false
+    featured: true
   },
   {
     id: "prod-ps3-4",
@@ -163,7 +267,7 @@ export const INITIAL_PRODUCTS = [
     stock: 2,
     image: "/covers/mk-komplete.png",
     description: "Incluye todos los personajes descargables: Freddy Krueger, Kenshi, Rain y Skarlet.",
-    featured: false
+    featured: true
   },
   {
     id: "prod-ps3-6",
@@ -176,6 +280,84 @@ export const INITIAL_PRODUCTS = [
     stock: 3,
     image: "/covers/cod-bo2.png",
     description: "Campaña futurista y el legendario modo Zombis en disco Bluray original.",
+    featured: true
+  },
+  {
+    id: "prod-ps3-7",
+    name: "Uncharted 2: Among Thieves",
+    category: "juegos_ps3",
+    price: 14000,
+    format: "Físico Usado",
+    condition: "Caja Original",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/uncharted2.jpg",
+    description: "La búsqueda de Shambhala en los Himalayas. Uno de los juegos mejor puntuados de PS3.",
+    featured: false
+  },
+  {
+    id: "prod-ps3-8",
+    name: "Red Dead Redemption (PS3)",
+    category: "juegos_ps3",
+    price: 17000,
+    format: "Físico Usado",
+    condition: "Con Mapa Original",
+    tag: "Físico Usado",
+    stock: 1,
+    image: "/covers/rdr1.jpg",
+    description: "La historia original de John Marston en la frontera estadounidense y México.",
+    featured: false
+  },
+  {
+    id: "prod-ps3-9",
+    name: "Need for Speed Most Wanted (2012)",
+    category: "juegos_ps3",
+    price: 15000,
+    format: "Físico Usado",
+    condition: "Disco 10/10",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/nfsmw.jpg",
+    description: "Carreras callejeras de mundo abierto desarrolladas por Criterion Games con persecuciones policiales.",
+    featured: false
+  },
+  {
+    id: "prod-ps3-10",
+    name: "Resident Evil 5",
+    category: "juegos_ps3",
+    price: 13000,
+    format: "Físico Usado",
+    condition: "Caja Original",
+    tag: "Físico Usado",
+    stock: 1,
+    image: "/covers/re5.jpg",
+    description: "Acción cooperativa inolvidable en África con Chris Redfield y Sheva Alomar.",
+    featured: false
+  },
+  {
+    id: "prod-ps3-11",
+    name: "Assassin's Creed IV: Black Flag",
+    category: "juegos_ps3",
+    price: 14500,
+    format: "Físico Usado",
+    condition: "Edición Especial",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/ac4.jpg",
+    description: "Navega y combate en el mar Caribe con el capitán pirata Edward Kenway.",
+    featured: false
+  },
+  {
+    id: "prod-ps3-12",
+    name: "Batman: Arkham City",
+    category: "juegos_ps3",
+    price: 14000,
+    format: "Físico Usado",
+    condition: "Original Impecable",
+    tag: "Físico Usado",
+    stock: 2,
+    image: "/covers/batman-ac.jpg",
+    description: "El Caballero de la Noche atrapado en la prisión de máxima seguridad de Arkham City.",
     featured: false
   },
 
