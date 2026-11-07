@@ -6,9 +6,11 @@ import {
   getRelativeTime,
   REPAIR_STATUS_CONFIG,
   buildReadyWhatsAppUrl,
+  buildRepairReceiptText,
   cleanPhone
 } from '../utils/formatters';
-import { CATEGORIES } from '../data/seedData';
+import { CATEGORIES, INITIAL_CONFIG } from '../data/seedData';
+import { compressImageFile } from '../utils/imageCompressor';
 import {
   Wrench,
   Package,
@@ -39,7 +41,10 @@ import {
   Gamepad,
   Cpu,
   Tv,
-  DollarSign
+  DollarSign,
+  Copy,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { PlayStationSymbolsRow } from './PlayStationSymbols';
 
@@ -73,6 +78,7 @@ export default function AdminDashboard({ onClose }) {
   const [repairSearchTerm, setRepairSearchTerm] = useState('');
   const [isNewRepairModalOpen, setIsNewRepairModalOpen] = useState(false);
   const [editingRepair, setEditingRepair] = useState(null);
+  const [copiedReceiptId, setCopiedReceiptId] = useState(null);
 
   // New repair form state
   const [repairForm, setRepairForm] = useState({
@@ -91,6 +97,8 @@ export default function AdminDashboard({ onClose }) {
   const [catalogSubTab, setCatalogSubTab] = useState('products'); // 'products' | 'services'
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
+  const [compressionDetails, setCompressionDetails] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '',
     category: 'juegos_ps4',
@@ -186,6 +194,26 @@ export default function AdminDashboard({ onClose }) {
     setEditingRepair(null);
   };
 
+  // Copy Quick Receipt to Clipboard for the customer
+  const handleCopyReceipt = (repair) => {
+    const text = buildRepairReceiptText(repair, config.businessName);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopiedReceiptId(repair.id);
+    showToast(`Comprobante Orden #${repair.id} copiado al portapapeles.`, 'success');
+    setTimeout(() => {
+      setCopiedReceiptId(null);
+    }, 2500);
+  };
+
   // Filtered repairs ordered strictly by arrival (original order or reverse)
   const filteredRepairs = repairs
     .filter(r => {
@@ -213,7 +241,7 @@ export default function AdminDashboard({ onClose }) {
   };
 
   // ==========================================
-  // CATALOG ACTIONS & BASE64 IMAGE HANDLER
+  // CATALOG ACTIONS & BASE64 IMAGE HANDLER (CANVAS 600px MAX)
   // ==========================================
   const handleOpenNewProduct = () => {
     setProductForm({
@@ -231,6 +259,7 @@ export default function AdminDashboard({ onClose }) {
       description: '',
       featured: false
     });
+    setCompressionDetails(null);
     setEditingProduct(null);
     setIsProductModalOpen(true);
   };
@@ -252,11 +281,12 @@ export default function AdminDashboard({ onClose }) {
       description: prod.description || '',
       featured: Boolean(prod.featured)
     });
+    setCompressionDetails(null);
     setIsProductModalOpen(true);
   };
 
-  // Real Base64 Image Upload with FileReader
-  const handleImageFileUpload = (e) => {
+  // Base64 Image Upload with offscreen Canvas auto-resize (max 600px, JPEG 0.7)
+  const handleImageFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -265,22 +295,22 @@ export default function AdminDashboard({ onClose }) {
       return;
     }
 
-    // Check size limit (e.g. 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('La imagen es muy pesada. Selecciona una menor a 5MB.', 'warning');
-      return;
+    try {
+      setIsCompressingImage(true);
+      const result = await compressImageFile(file, 600, 0.7);
+      setProductForm(prev => ({ ...prev, image: result.base64 }));
+      setCompressionDetails({
+        originalSizeKb: result.originalSizeKb,
+        compressedSizeKb: result.compressedSizeKb,
+        dimensions: `${result.width}x${result.height}px`
+      });
+      showToast(`Foto optimizada con Canvas: de ${result.originalSizeKb} KB a ${result.compressedSizeKb} KB (máx 600px).`, 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al procesar la imagen: ' + err.message, 'error');
+    } finally {
+      setIsCompressingImage(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const base64Data = uploadEvent.target.result;
-      setProductForm(prev => ({ ...prev, image: base64Data }));
-      showToast('Imagen cargada y convertida a Base64 con éxito.', 'success');
-    };
-    reader.onerror = () => {
-      showToast('Error al leer el archivo de imagen.', 'error');
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSaveProduct = (e) => {
@@ -396,8 +426,17 @@ export default function AdminDashboard({ onClose }) {
   };
 
   const handleConfirmReset = () => {
-    if (window.confirm('¿Seguro que deseas restablecer TODOS los productos, reparaciones y configuración a los valores iniciales de fábrica? Esta acción no se puede deshacer.')) {
+    if (window.confirm('¿Seguro que deseas restablecer TODOS los productos, reparaciones y configuración a los valores iniciales de fábrica? Esta acción reiniciará la base de datos para la demostración.')) {
       resetAllData();
+      setConfigForm({
+        businessName: INITIAL_CONFIG.businessName,
+        whatsappNumber: INITIAL_CONFIG.whatsappNumber,
+        address: INITIAL_CONFIG.address,
+        businessHours: INITIAL_CONFIG.businessHours,
+        newPin: '',
+        confirmPin: ''
+      });
+      showToast('Datos de demostración y catálogo restablecidos a los valores originales de fábrica.', 'info');
     }
   };
 
@@ -688,21 +727,46 @@ export default function AdminDashboard({ onClose }) {
                             </button>
                           </div>
 
-                          {/* WhatsApp Notification Button */}
-                          <a
-                            href={whatsAppUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
-                              isReady
-                                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/25 animate-pulse'
-                                : 'bg-slate-800 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30'
-                            }`}
-                            title="Notificar al cliente por WhatsApp"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span>Avisar por WhatsApp</span>
-                          </a>
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Quick Receipt Copy Button */}
+                            <button
+                              onClick={() => handleCopyReceipt(repair)}
+                              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                                copiedReceiptId === repair.id
+                                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-md'
+                                  : 'bg-ps-blue/20 hover:bg-ps-blue/30 text-ps-neon border border-ps-blue/40 hover:shadow-ps-glow'
+                              }`}
+                              title="Copiar comprobante de ingreso listo para enviar al cliente por WhatsApp"
+                            >
+                              {copiedReceiptId === repair.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                  <span>¡Comprobante Copiado!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span>Copiar Comprobante</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* WhatsApp Notification Button */}
+                            <a
+                              href={whatsAppUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                                isReady
+                                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/25 animate-pulse'
+                                  : 'bg-slate-800 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30'
+                              }`}
+                              title="Notificar al cliente por WhatsApp"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              <span>Avisar por WhatsApp</span>
+                            </a>
+                          </div>
 
                         </div>
 
@@ -1029,24 +1093,32 @@ export default function AdminDashboard({ onClose }) {
             </div>
 
             {/* Factory Reset Seed Data Button */}
-            <div className="p-6 rounded-2xl bg-rose-950/20 border border-rose-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <h4 className="text-sm font-bold text-rose-300 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>Restablecer Datos de Demostración Originales</span>
-                </h4>
-                <p className="text-xs text-slate-400 mt-1">
-                  Reinicia el catálogo con los 8 productos originales, 4 servicios técnicos y 3 reparaciones de prueba.
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-rose-950/30 via-slate-900 to-rose-950/20 border-2 border-rose-500/40 shadow-lg shadow-rose-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 rounded-lg bg-rose-500/20 text-rose-400">
+                    <RotateCcw className="w-5 h-5 animate-spin-slow" />
+                  </span>
+                  <h4 className="text-base font-bold text-white font-gaming tracking-wide">
+                    RESTAURAR DATOS DE FÁBRICA / DEMO
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
+                  Si durante la demostración en vivo se alteraron productos, reparaciones, precios o configuración, usá este botón para restablecer inmediatamente todos los datos originales iniciales en <code className="text-ps-neon bg-slate-900 px-1 py-0.5 rounded font-mono">localStorage</code>.
                 </p>
+                <div className="flex items-center gap-2 pt-1 text-[11px] text-rose-300 font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Restaura: 8 productos gaming, 4 servicios técnicos, 3 reparaciones y PIN 2020.</span>
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleConfirmReset}
-                className="px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5"
+                className="w-full md:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-extrabold tracking-wider shadow-lg shadow-rose-600/30 transition-all whitespace-nowrap flex items-center justify-center gap-2 group cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4" />
-                <span>Restablecer Demo</span>
+                <RotateCcw className="w-4 h-4 group-hover:-rotate-90 transition-transform duration-300" />
+                <span>RESTAURAR DATOS DE FÁBRICA</span>
               </button>
             </div>
 
@@ -1254,7 +1326,7 @@ export default function AdminDashboard({ onClose }) {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* File Upload (FileReader Base64) */}
+                  {/* File Upload (FileReader Base64 with Canvas Compression) */}
                   <div>
                     <input
                       type="file"
@@ -1265,11 +1337,21 @@ export default function AdminDashboard({ onClose }) {
                     />
                     <button
                       type="button"
+                      disabled={isCompressingImage}
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2.5 px-3 rounded-xl bg-ps-blue/20 hover:bg-ps-blue/30 border border-ps-blue/50 text-ps-neon text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                      className="w-full py-2.5 px-3 rounded-xl bg-ps-blue/20 hover:bg-ps-blue/30 border border-ps-blue/50 text-ps-neon text-xs font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                     >
-                      <Upload className="w-4 h-4" />
-                      <span>Cargar foto desde PC / Celular</span>
+                      {isCompressingImage ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-ps-neon" />
+                          <span>Comprimiendo a 600px...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          <span>Cargar foto desde Celular o PC</span>
+                        </>
+                      )}
                     </button>
                   </div>
 
@@ -1279,11 +1361,32 @@ export default function AdminDashboard({ onClose }) {
                       type="url"
                       placeholder="O pegar enlace web (Unsplash / Web)"
                       value={productForm.image.startsWith('data:') ? '' : productForm.image}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, image: e.target.value }))}
+                      onChange={(e) => {
+                        setProductForm(prev => ({ ...prev, image: e.target.value }));
+                        setCompressionDetails(null);
+                      }}
                       className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-ps-neon"
                     />
                   </div>
                 </div>
+
+                {/* Compression Success Badge */}
+                {compressionDetails && (
+                  <div className="mt-3 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-[11px] text-emerald-300 flex items-center justify-between animate-fadeIn">
+                    <div className="flex items-center gap-1.5 font-semibold">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Optimización Canvas (Máx 600px • JPEG 0.7):</span>
+                    </div>
+                    <div className="font-mono text-xs">
+                      <span className="line-through text-slate-400 mr-1.5">{compressionDetails.originalSizeKb} KB</span>
+                      <strong className="text-emerald-400 font-bold">➔ {compressionDetails.compressedSizeKb} KB</strong>
+                    </div>
+                  </div>
+                )}
+                
+                <p className="text-[10px] text-slate-400 mt-2">
+                  🛡️ Compresión activa en Canvas: Las fotos se escalan a 600px con calidad JPEG 0.7 para optimizar el almacenamiento en localStorage.
+                </p>
               </div>
 
               <div>

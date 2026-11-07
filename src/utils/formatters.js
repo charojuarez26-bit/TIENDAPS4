@@ -104,6 +104,10 @@ export function buildReadyWhatsAppUrl(repair, businessName) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
+export function buildRepairReceiptText(repair, businessName) {
+  return `🔧 *Orden de Ingreso #${repair.id}* - ${businessName} | Equipo: ${repair.device} | Falla: ${repair.issue} | Consultá el estado en vivo en nuestra web con tu DNI: ${repair.dni}`;
+}
+
 export function buildCartCheckoutWhatsAppUrl(cart, customerData, config) {
   const phone = cleanPhone(config.whatsappNumber);
   
