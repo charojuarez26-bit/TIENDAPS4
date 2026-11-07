@@ -9,12 +9,12 @@ import {
 const AppContext = createContext();
 
 const STORAGE_KEYS = {
-  CONFIG: 'playcenter_config_v1',
-  PRODUCTS: 'playcenter_products_v1',
-  SERVICES: 'playcenter_services_v1',
-  REPAIRS: 'playcenter_repairs_v1',
-  CART: 'playcenter_cart_v1',
-  AUTH: 'playcenter_admin_auth_v1',
+  CONFIG: 'playcenter_config_v2',
+  PRODUCTS: 'playcenter_products_v2',
+  SERVICES: 'playcenter_services_v2',
+  REPAIRS: 'playcenter_repairs_v2',
+  CART: 'playcenter_cart_v2',
+  AUTH: 'playcenter_admin_auth_v2',
 };
 
 export function AppProvider({ children }) {

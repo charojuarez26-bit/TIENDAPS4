@@ -1306,22 +1306,85 @@ export default function AdminDashboard({ onClose }) {
                   <span>Imagen del Producto (Archivo local o URL)</span>
                 </label>
 
-                {/* Instant Preview */}
+                {/* Instant Preview with Automatic Physical Blu-ray Box Framing */}
                 {productForm.image && (
-                  <div className="relative aspect-video max-h-48 rounded-xl overflow-hidden bg-black/60 border border-ps-neon/40 mb-3 mx-auto flex items-center justify-center">
-                    <img
-                      src={productForm.image}
-                      alt="Vista previa"
-                      className="w-full h-full object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
-                      className="absolute top-2 right-2 p-1 rounded-lg bg-rose-600 text-white hover:bg-rose-500 shadow-md"
-                      title="Quitar foto"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                  <div className="mb-4 flex flex-col items-center">
+                    {productForm.category === 'juegos_ps4' || productForm.category === 'juegos_ps3' ? (
+                      /* SIMULATED PHYSICAL BLU-RAY BOX TEMPLATE */
+                      <div className="relative w-48 rounded-xl overflow-hidden border-2 bg-slate-950 shadow-2xl transition-all">
+                        {/* Tape Header */}
+                        {productForm.category === 'juegos_ps4' ? (
+                          <div className="bg-[#0070d1] text-white px-2 py-1 flex items-center justify-between text-xs font-bold font-gaming shadow-md">
+                            <span className="text-white font-extrabold tracking-wider">PS4</span>
+                            <span className="text-[8px] uppercase tracking-widest opacity-90 font-mono">Blu-ray Disc</span>
+                          </div>
+                        ) : (
+                          <div className="bg-gradient-to-r from-neutral-950 via-neutral-900 to-red-700 text-white px-2 py-1 flex items-center justify-between text-xs font-bold font-gaming shadow-md border-b border-red-500/40">
+                            <span className="text-red-100 font-extrabold tracking-wider">PS3</span>
+                            <span className="text-[8px] uppercase tracking-widest text-red-200 font-mono">Blu-ray Disc</span>
+                          </div>
+                        )}
+
+                        {/* Cover Image in 3/4 ratio */}
+                        <div className="relative aspect-[3/4] w-full overflow-hidden bg-black">
+                          <img
+                            src={productForm.image}
+                            alt="Vista previa caja física"
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Spine reflection sheen */}
+                          <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none z-10" />
+
+                          {/* Top Condition Tag */}
+                          <div className="absolute top-1.5 left-1.5 z-20">
+                            <span className="text-[8px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-900/90 text-ps-neon border border-ps-neon/50 shadow">
+                              {productForm.format || productForm.condition || 'Físico Original'}
+                            </span>
+                          </div>
+
+                          {/* Retail Price Splash */}
+                          {productForm.price && (
+                            <div className="absolute bottom-1 right-1 z-20">
+                              <div className="bg-[#ffe600] text-neutral-950 px-2 py-0.5 rounded font-gaming font-black text-xs shadow border border-black leading-tight">
+                                <div className="text-[7px] text-red-700 font-bold uppercase leading-none">OFERTA</div>
+                                {formatARS(productForm.price)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Top-right remove photo button */}
+                        <button
+                          type="button"
+                          onClick={() => { setProductForm(prev => ({ ...prev, image: '' })); setCompressionDetails(null); }}
+                          className="absolute top-1.5 right-1.5 p-1 rounded-md bg-rose-600/90 text-white hover:bg-rose-500 shadow z-30"
+                          title="Quitar foto"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div className="py-1 px-2 text-[10px] text-center font-bold text-slate-300 bg-slate-900 border-t border-slate-800">
+                          📦 Plantilla Caja Blu-ray {productForm.category === 'juegos_ps4' ? 'PS4' : 'PS3'}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Standard wide console/accessory preview */
+                      <div className="relative aspect-video max-h-48 w-full rounded-xl overflow-hidden bg-black/60 border border-ps-neon/40 flex items-center justify-center">
+                        <img
+                          src={productForm.image}
+                          alt="Vista previa"
+                          className="w-full h-full object-contain"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { setProductForm(prev => ({ ...prev, image: '' })); setCompressionDetails(null); }}
+                          className="absolute top-2 right-2 p-1 rounded-lg bg-rose-600 text-white hover:bg-rose-500 shadow-md"
+                          title="Quitar foto"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1454,8 +1517,34 @@ export default function AdminDashboard({ onClose }) {
                   />
                 </div>
 
-                {/* Conditional specs: if console, ask capacity/model */}
-                {productForm.category.includes('consola') ? (
+                {/* Conditional specs based on category */}
+                {productForm.category === 'juegos_ps4' || productForm.category === 'juegos_ps3' ? (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Formato de Venta</label>
+                      <select
+                        value={productForm.format || 'Físico Usado'}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, format: e.target.value, tag: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon cursor-pointer"
+                      >
+                        <option value="Físico Usado Impecable">💿 Físico Usado Impecable</option>
+                        <option value="Físico Usado">💿 Físico Usado</option>
+                        <option value="Físico Nuevo Sellado">✨ Físico Nuevo Sellado</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">Condición de Caja / Disco</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Caja Original, Disco 10/10, Con Mapa, Hits..."
+                        value={productForm.condition || ''}
+                        onChange={(e) => setProductForm(prev => ({ ...prev, condition: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
+                      />
+                    </div>
+                  </>
+                ) : productForm.category.includes('consola') ? (
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">Capacidad / Modelo</label>
                     <input
@@ -1468,12 +1557,12 @@ export default function AdminDashboard({ onClose }) {
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Tipo / Formato</label>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Tipo de Joystick / Accesorio</label>
                     <input
                       type="text"
-                      placeholder="Ej: Digital Primario / Original Sony"
-                      value={productForm.format || productForm.type}
-                      onChange={(e) => setProductForm(prev => ({ ...prev, format: e.target.value, type: e.target.value }))}
+                      placeholder="Ej: Original Sony Reacondicionado / Alternativo AAA"
+                      value={productForm.type || productForm.format}
+                      onChange={(e) => setProductForm(prev => ({ ...prev, type: e.target.value, format: e.target.value }))}
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-ps-neon"
                     />
                   </div>

@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { CATEGORIES } from '../data/seedData';
 import { formatARS } from '../utils/formatters';
-import { Search, ShoppingBag, Check, SlidersHorizontal, Disc3, Gamepad, Tv, Cpu, Headphones, Sparkles, AlertCircle } from 'lucide-react';
-import { PlayStationSymbolsRow, PsTriangle, PsCircle, PsCross, PsSquare } from './PlayStationSymbols';
+import { Search, ShoppingBag, Check, SlidersHorizontal, Disc3, Gamepad, Tv, Cpu, Headphones, Sparkles, AlertCircle, Info } from 'lucide-react';
+import { PlayStationSymbolsRow } from './PlayStationSymbols';
+import PhysicalGameBox from './PhysicalGameBox';
 
 const ICON_MAP = {
   Disc3: Disc3,
@@ -21,40 +22,41 @@ export default function CatalogSection() {
   const [sortBy, setSortBy] = useState('featured');
   const [addedIds, setAddedIds] = useState({});
 
+  const isGameCategory = activeCategory === 'juegos_ps4' || activeCategory === 'juegos_ps3';
+
   // Dynamic subfilters based on category
   const dynamicFilters = useMemo(() => {
+    if (isGameCategory) {
+      return [
+        { id: 'all', label: 'Todos los discos' },
+        { id: 'usado', label: '💿 Físico Usado' },
+        { id: 'nuevo', label: '✨ Físico Nuevo Sellado' },
+      ];
+    }
+
     switch (activeCategory) {
-      case 'juegos_ps4':
-      case 'juegos_ps3':
-        return [
-          { id: 'all', label: 'Todos los formatos' },
-          { id: 'fisico', label: '💿 Formato Físico' },
-          { id: 'digital', label: '⚡ Formato Digital' },
-        ];
       case 'consolas_ps4':
         return [
           { id: 'all', label: 'Todas las PS4' },
           { id: 'slim', label: 'PS4 Slim' },
           { id: 'pro', label: 'PS4 Pro 4K' },
-          { id: 'sellada', label: 'Selladas / Originales' },
         ];
       case 'consolas_ps3':
         return [
           { id: 'all', label: 'Todas las PS3' },
           { id: 'hen', label: '🪄 Con HEN / Juegos' },
-          { id: 'superslim', label: 'Super Slim' },
-          { id: 'slim', label: 'PS3 Slim' },
+          { id: 'original', label: '💿 Sistema Original' },
         ];
       case 'accesorios':
         return [
-          { id: 'all', label: 'Todos los mandos' },
+          { id: 'all', label: 'Todos los accesorios' },
           { id: 'sony', label: '🎮 Original Sony' },
           { id: 'alternativo', label: '🕹️ Alternativo AAA' },
         ];
       default:
         return [{ id: 'all', label: 'Todos' }];
     }
-  }, [activeCategory]);
+  }, [activeCategory, isGameCategory]);
 
   // Reset subfilter when category changes
   const handleCategoryChange = (catId) => {
@@ -75,7 +77,8 @@ export default function CatalogSection() {
           const matchesName = item.name.toLowerCase().includes(q);
           const matchesDesc = (item.description || '').toLowerCase().includes(q);
           const matchesTag = (item.tag || '').toLowerCase().includes(q);
-          if (!matchesName && !matchesDesc && !matchesTag) return false;
+          const matchesCond = (item.condition || '').toLowerCase().includes(q);
+          if (!matchesName && !matchesDesc && !matchesTag && !matchesCond) return false;
         }
 
         // Subfilter match
@@ -83,15 +86,16 @@ export default function CatalogSection() {
 
         const tag = (item.tag || '').toLowerCase();
         const format = (item.format || '').toLowerCase();
+        const condition = (item.condition || '').toLowerCase();
         const model = (item.model || '').toLowerCase();
         const type = (item.type || '').toLowerCase();
         const systemStatus = (item.systemStatus || '').toLowerCase();
 
-        if (selectedSubfilter === 'fisico') {
-          return format.includes('físico') || format.includes('fisico') || tag.includes('físico') || tag.includes('fisico');
+        if (selectedSubfilter === 'usado') {
+          return format.includes('usado') || tag.includes('usado') || condition.includes('usado');
         }
-        if (selectedSubfilter === 'digital') {
-          return format.includes('digital') || tag.includes('digital');
+        if (selectedSubfilter === 'nuevo') {
+          return format.includes('nuevo') || format.includes('sellado') || tag.includes('nuevo') || condition.includes('nuevo');
         }
         if (selectedSubfilter === 'slim') {
           return model.includes('slim') && !model.includes('super');
@@ -99,14 +103,11 @@ export default function CatalogSection() {
         if (selectedSubfilter === 'pro') {
           return model.includes('pro');
         }
-        if (selectedSubfilter === 'sellada') {
-          return systemStatus.includes('sellada') || tag.includes('sellada');
-        }
         if (selectedSubfilter === 'hen') {
-          return systemStatus.includes('hen') || tag.includes('hen') || format.includes('hen');
+          return systemStatus.includes('hen') || tag.includes('hen');
         }
-        if (selectedSubfilter === 'superslim') {
-          return model.includes('super');
+        if (selectedSubfilter === 'original') {
+          return systemStatus.includes('original') || tag.includes('original');
         }
         if (selectedSubfilter === 'sony') {
           return type.includes('sony') || tag.includes('sony') || item.name.toLowerCase().includes('sony');
@@ -127,7 +128,7 @@ export default function CatalogSection() {
       });
   }, [products, activeCategory, searchQuery, selectedSubfilter, sortBy]);
 
-  const handleAddWithFeedback = (product) => {
+  const handleAddWideProduct = (product) => {
     addToCart(product, false);
     setAddedIds(prev => ({ ...prev, [product.id]: true }));
     setTimeout(() => {
@@ -144,13 +145,16 @@ export default function CatalogSection() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <PlayStationSymbolsRow size="w-3.5 h-3.5" />
-              <span className="text-xs uppercase font-bold text-ps-neon tracking-wider">Catálogo Disponible</span>
+              <span className="text-xs uppercase font-bold text-ps-neon tracking-wider">Catálogo Físico & Consolas</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-gaming tracking-wide">
-              JUEGOS, CONSOLAS & MANDOS
+              {isGameCategory ? 'JUEGOS FÍSICOS ORIGINALES' : 'CONSOLAS & ACCESORIOS'}
             </h2>
             <p className="text-slate-400 text-sm mt-1 max-w-xl">
-              Stock verificado en Aguilares para retiro inmediato o entrega a domicilio.
+              {isGameCategory 
+                ? 'Estuches Blu-ray originales con discos testeados al 100% en taller de Aguilares. ¡Precios de folleto retail!'
+                : 'Consolas con mantenimiento preventivo, joysticks testeados y garantía escrita de 90 días.'
+              }
             </p>
           </div>
 
@@ -159,7 +163,7 @@ export default function CatalogSection() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar juego, consola o accesorio..."
+              placeholder="Buscar título, consola o joystick..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-ps-surface border border-ps-border focus:border-ps-neon text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-ps-neon transition-all"
@@ -195,9 +199,9 @@ export default function CatalogSection() {
                   <Icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="leading-tight">{cat.label}</div>
+                  <div className="leading-tight font-bold text-xs sm:text-sm">{cat.label}</div>
                   <span className="text-[10px] text-slate-500 font-normal">
-                    {products.filter(p => p.category === cat.id).length} ítems
+                    {products.filter(p => p.category === cat.id).length} ítems en stock
                   </span>
                 </div>
               </button>
@@ -210,7 +214,7 @@ export default function CatalogSection() {
           {/* Subfilter Chips */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 pl-1 shrink-0">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Filtros:
+              <SlidersHorizontal className="w-3.5 h-3.5" /> Estado:
             </span>
             {dynamicFilters.map(filter => (
               <button
@@ -242,13 +246,30 @@ export default function CatalogSection() {
           </div>
         </div>
 
-        {/* Products Grid */}
+        {/* Informative Retail Header Banner for Games */}
+        {isGameCategory && (
+          <div className="mb-6 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-[#0070d1]/15 via-ps-surface to-slate-900 border border-[#0070d1]/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-[#0070d1] text-white flex items-center justify-center font-bold text-sm shrink-0 font-gaming shadow-md">
+                {activeCategory === 'juegos_ps4' ? 'PS4' : 'PS3'}
+              </div>
+              <div className="text-xs sm:text-sm text-slate-200">
+                <span className="font-bold text-white">Estuches y Cajas Físicas Blu-ray Originales</span> • Verificados y pulidos en banco de trabajo.
+              </div>
+            </div>
+            <span className="hidden sm:inline text-[11px] font-bold text-[#ffe600] bg-black/40 px-2.5 py-1 rounded border border-yellow-500/40">
+              🏷️ PRECIOS OFERTA RETAIL
+            </span>
+          </div>
+        )}
+
+        {/* PRODUCTS RENDER */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16 px-4 rounded-2xl bg-ps-surface/40 border border-ps-border">
             <AlertCircle className="w-12 h-12 text-slate-500 mx-auto mb-3" />
             <h3 className="text-lg font-bold text-white font-gaming">No se encontraron productos</h3>
             <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
-              Prueba cambiando los filtros seleccionados o la búsqueda de texto.
+              Prueba cambiando el filtro de estado o la búsqueda de texto.
             </p>
             <button
               onClick={() => { setSelectedSubfilter('all'); setSearchQuery(''); }}
@@ -257,8 +278,24 @@ export default function CatalogSection() {
               Restablecer filtros
             </button>
           </div>
+        ) : isGameCategory ? (
+          /* ======================================================== */
+          /* 1. DENSE GRID OF PHYSICAL BLU-RAY BOXES (2 to 5 columns) */
+          /* ======================================================== */
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 animate-fadeIn">
+            {filteredProducts.map(product => (
+              <PhysicalGameBox
+                key={product.id}
+                product={product}
+                onAddToCart={(prod) => addToCart(prod, false)}
+              />
+            ))}
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          /* ======================================================== */
+          /* 2. WIDE CARDS FOR CONSOLES AND ACCESSORIES              */
+          /* ======================================================== */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
             {filteredProducts.map(product => {
               const hasStock = product.stock > 0;
               const isAdded = addedIds[product.id];
@@ -266,70 +303,67 @@ export default function CatalogSection() {
               return (
                 <div
                   key={product.id}
-                  className="group flex flex-col rounded-2xl bg-ps-surface border border-ps-border hover:border-ps-blue/60 hover:shadow-ps-glow transition-all duration-300 overflow-hidden"
+                  className="group flex flex-col justify-between rounded-2xl bg-ps-surface border border-ps-border hover:border-ps-neon/50 hover:shadow-ps-glow transition-all duration-300 overflow-hidden"
                 >
-                  {/* Image container */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
+                  {/* Photo Container */}
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
-
-                    {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-ps-surface via-transparent to-transparent opacity-90" />
 
-                    {/* Badge top-left: Format / Tag */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+                    {/* Badge top-left */}
+                    <div className="absolute top-3 left-3">
                       <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-ps-bg/90 border border-ps-neon/40 text-ps-neon backdrop-blur-sm shadow-md">
-                        {product.tag || product.format || product.model}
+                        {product.tag || product.model || 'Garantía 90 Días'}
                       </span>
-                      {product.featured && (
-                        <span className="text-[9px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 flex items-center gap-1 shadow-sm">
-                          <Sparkles className="w-2.5 h-2.5" /> Top Ventas
-                        </span>
-                      )}
                     </div>
 
-                    {/* Stock status top-right */}
+                    {/* Stock badge top-right */}
                     <div className="absolute top-3 right-3">
                       {hasStock ? (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 backdrop-blur-sm flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 backdrop-blur-sm">
                           Stock: {product.stock}
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 backdrop-blur-sm">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 backdrop-blur-sm">
                           Agotado
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Body Content */}
-                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                  {/* Body Content with Specs */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
-                      {/* Technical specifications pills */}
-                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                      {/* Specifications Tags */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                        {product.model && (
+                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-800 text-ps-neon font-semibold border border-slate-700">
+                            Modelo: {product.model}
+                          </span>
+                        )}
                         {product.capacity && (
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
+                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-200 font-semibold border border-slate-700">
                             💾 {product.capacity}
                           </span>
                         )}
-                        {product.model && (
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
-                            🎮 {product.model}
+                        {product.systemStatus && (
+                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-emerald-950/60 text-emerald-300 font-semibold border border-emerald-500/30">
+                            ⚙️ {product.systemStatus}
                           </span>
                         )}
                         {product.type && (
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
+                          <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-ps-blue/20 text-ps-neon font-semibold border border-ps-blue/40">
                             ⚡ {product.type}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-base font-bold text-white group-hover:text-ps-neon transition-colors line-clamp-2 leading-snug">
+                      <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-ps-neon transition-colors leading-snug">
                         {product.name}
                       </h3>
 
@@ -338,39 +372,40 @@ export default function CatalogSection() {
                       </p>
                     </div>
 
-                    {/* Price and Action Button */}
-                    <div className="mt-4 pt-4 border-t border-ps-border/70 flex items-center justify-between gap-3">
+                    {/* Price and Add button */}
+                    <div className="mt-5 pt-4 border-t border-ps-border flex items-center justify-between gap-3">
                       <div>
-                        <div className="text-[10px] text-slate-500 uppercase font-semibold">Precio ARS</div>
-                        <div className="text-lg sm:text-xl font-extrabold text-white font-gaming text-ps-neon">
+                        <div className="text-[10px] text-slate-400 uppercase font-semibold">Precio Total ARS</div>
+                        <div className="text-xl font-extrabold text-white font-gaming text-ps-neon">
                           {formatARS(product.price)}
                         </div>
                       </div>
 
                       <button
-                        onClick={() => handleAddWithFeedback(product)}
+                        onClick={() => handleAddWideProduct(product)}
                         disabled={!hasStock}
-                        className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all duration-200 ${
+                        className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all duration-200 ${
                           !hasStock
                             ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                             : isAdded
-                            ? 'bg-emerald-500 text-slate-950 shadow-md scale-95'
+                            ? 'bg-emerald-500 text-slate-950 shadow-md font-extrabold'
                             : 'bg-gradient-to-r from-ps-blue to-ps-blueDark hover:from-ps-blueLight hover:to-ps-blue text-white shadow-ps-glow hover:scale-105'
                         }`}
                       >
                         {isAdded ? (
                           <>
                             <Check className="w-4 h-4 stroke-[3]" />
-                            <span>¡Listo!</span>
+                            <span>¡Agregado!</span>
                           </>
                         ) : (
                           <>
                             <ShoppingBag className="w-4 h-4" />
-                            <span>{hasStock ? 'Agregar' : 'Sin stock'}</span>
+                            <span>{hasStock ? 'Agregar al Carrito' : 'Agotado'}</span>
                           </>
                         )}
                       </button>
                     </div>
+
                   </div>
                 </div>
               );
