@@ -1910,7 +1910,7 @@ export default function AdminDashboard({ onClose }) {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white font-gaming tracking-wide">
-                    DATOS DE PLAYCENTER AGUILARES
+                    DATOS DEL NEGOCIO - EL REY PLAY
                   </h3>
                   <p className="text-xs text-slate-400">
                     Modifica los datos comerciales visibles en el header, comprobantes y WhatsApp.
@@ -3124,7 +3124,7 @@ export default function AdminDashboard({ onClose }) {
             {/* Structured Report Preview */}
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-slate-300 space-y-3 max-h-72 overflow-y-auto">
               <div className="text-center font-bold text-white pb-2 border-b border-slate-800">
-                💰 PLAYCENTER AGUILARES - CIERRE DE CAJA
+                💰 {config.businessName?.toUpperCase() || 'EL REY PLAY'} - CIERRE DE CAJA
                 <div className="text-[11px] text-ps-neon font-normal mt-0.5">
                   {getDateFilterLabel()} • {formatDateOnly(new Date())}
                 </div>

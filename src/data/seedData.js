@@ -1,11 +1,11 @@
 export const INITIAL_CONFIG = {
-  businessName: "PlayCenter Aguilares",
+  businessName: "El Rey Play",
   whatsappNumber: "5493865000000",
   adminPin: "2020",
   address: "Aguilares, Tucumán",
   businessHours: "Lunes a Sábado de 09:30 a 13:00 y 17:30 a 21:30",
   phoneDisplay: "+54 9 3865 00-0000",
-  instagram: "@playcenter.aguilares",
+  instagram: "@elreyplay.aguilares",
   googleMapsUrl: "https://maps.google.com/?q=Aguilares+Tucuman",
   warrantyPolicy: "Garantía escrita de 90 días en todos los servicios y consolas.",
 };

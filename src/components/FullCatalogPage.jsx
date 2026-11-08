@@ -551,7 +551,7 @@ export default function FullCatalogPage({ onBackToHome, initialCategory = 'all' 
 
           <a
             href={`https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(
-              `¡Hola PlayCenter Aguilares! Estoy buscando un juego que no encontré en el catálogo web. ¿Lo tienen o me lo pueden conseguir?`
+              `¡Hola ${config.businessName || 'El Rey Play'}! Estoy buscando un juego que no encontré en el catálogo web. ¿Lo tienen o me lo pueden conseguir?`
             )}`}
             target="_blank"
             rel="noopener noreferrer"

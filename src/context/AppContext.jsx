@@ -21,11 +21,25 @@ const STORAGE_KEYS = {
 };
 
 export function AppProvider({ children }) {
-  // Load or seed config
+  // Load or seed config with automatic migration to "El Rey Play"
   const [config, setConfig] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CONFIG);
-      return saved ? JSON.parse(saved) : INITIAL_CONFIG;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Automatic migration: If businessName still has old branding, update seamlessly
+        if (!parsed.businessName || parsed.businessName.toLowerCase().includes('playcenter')) {
+          const updated = {
+            ...parsed,
+            businessName: 'El Rey Play',
+            instagram: parsed.instagram?.includes('playcenter') ? '@elreyplay.aguilares' : parsed.instagram
+          };
+          localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(updated));
+          return updated;
+        }
+        return parsed;
+      }
+      return INITIAL_CONFIG;
     } catch (e) {
       console.error('Error loading config:', e);
       return INITIAL_CONFIG;

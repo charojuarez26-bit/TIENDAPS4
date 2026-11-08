@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ShoppingBag, Lock, ShieldCheck, Wrench, Menu, X, MapPin, Grid } from 'lucide-react';
+import { ShoppingBag, Lock, ShieldCheck, Wrench, Menu, X, MapPin, Grid, Crown } from 'lucide-react';
 import { PlayStationSymbolsRow } from './PlayStationSymbols';
 
 export default function Header({
@@ -67,10 +67,10 @@ export default function Header({
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Logo */}
-          <div className="flex items-center gap-3 cursor-pointer select-none" onClick={handleLogoClick}>
+          <div className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none" onClick={handleLogoClick}>
             <div className="relative group">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-ps-blue to-ps-blueDark flex items-center justify-center shadow-ps-glow border border-ps-neon/40 group-hover:scale-105 transition-transform">
-                <span className="text-white font-extrabold text-xl sm:text-2xl font-gaming tracking-tight">PS</span>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-ps-blue via-ps-blueDark to-slate-900 flex items-center justify-center shadow-ps-glow border border-ps-neon/40 group-hover:scale-105 transition-transform">
+                <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-ps-neon rounded-full border-2 border-ps-bg flex items-center justify-center">
                 <div className="w-1.5 h-1.5 bg-ps-bg rounded-full animate-ping"></div>
@@ -79,17 +79,17 @@ export default function Header({
 
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-gaming text-xl sm:text-2xl font-bold tracking-wider text-white">
-                  PLAYCENTER
+                <span className="font-gaming text-xl sm:text-2xl font-black tracking-wider text-white">
+                  EL REY
                 </span>
-                <span className="font-gaming text-lg sm:text-xl font-bold text-ps-neon tracking-wide">
-                  AGUILARES
+                <span className="font-gaming text-lg sm:text-xl font-black text-ps-neon tracking-wide">
+                  PLAY
                 </span>
               </div>
               <div className="text-[10px] text-slate-400 tracking-wider flex items-center gap-1 uppercase font-semibold">
-                <span className="text-ps-blueLight">Gaming & Service</span>
-                <span className="text-slate-600">|</span>
-                <span>Tucumán</span>
+                <span className="text-ps-blueLight font-bold">Aguilares</span>
+                <span className="text-slate-600">•</span>
+                <span>Servicio Técnico & Gaming</span>
               </div>
             </div>
           </div>

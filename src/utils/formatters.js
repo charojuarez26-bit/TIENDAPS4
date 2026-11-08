@@ -100,18 +100,21 @@ export function cleanPhone(phone) {
 export function buildReadyWhatsAppUrl(repair, businessName) {
   const phone = cleanPhone(repair.phone);
   const formattedCost = formatARS(repair.cost);
-  const message = `¡Hola ${repair.clientName}! Te escribimos de ${businessName}. Te avisamos que tu ${repair.device} (Orden #${repair.id}) ya está LISTO PARA RETIRAR por el local. El total del servicio es ${formattedCost}. ¡Te esperamos!`;
+  const nameToUse = businessName || 'El Rey Play';
+  const message = `¡Hola ${repair.clientName}! Te escribimos de ${nameToUse}. Te avisamos que tu ${repair.device} (Orden #${repair.id}) ya está LISTO PARA RETIRAR por nuestro local en Aguilares. Total: ${formattedCost}. ¡Te esperamos!`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
 export function buildRepairReceiptText(repair, businessName) {
-  return `🔧 *Orden de Ingreso #${repair.id}* - ${businessName} | Equipo: ${repair.device} | Falla: ${repair.issue} | Consultá el estado en vivo en nuestra web con tu DNI: ${repair.dni}`;
+  const nameToUse = businessName || 'El Rey Play';
+  return `🔧 *Orden de Ingreso #${repair.id}* - ${nameToUse} | Equipo: ${repair.device} | Falla: ${repair.issue} | Consultá el estado en vivo en nuestra web con tu DNI: ${repair.dni}`;
 }
 
 export function buildCartCheckoutWhatsAppUrl(cart, customerData, config) {
   const phone = cleanPhone(config.whatsappNumber);
+  const nameToUse = config.businessName || 'El Rey Play';
   
-  let text = `🎮 *NUEVO PEDIDO - ${config.businessName}*\n`;
+  let text = `🎮 *¡Hola ${nameToUse}! Quiero confirmar el siguiente pedido:*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `👤 *Cliente:* ${customerData.name}\n`;
   if (customerData.phone) {
@@ -143,7 +146,7 @@ export function buildCartCheckoutWhatsAppUrl(cart, customerData, config) {
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `💰 *TOTAL A ABONAR: ${formatARS(total)}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Pedido generado desde la tienda web oficial de Aguilares, Tucumán._`;
+  text += `_Pedido generado desde la tienda web oficial de ${nameToUse} (Aguilares, Tucumán)._`;
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
@@ -184,7 +187,7 @@ export function buildCashClosureText({
   totalOtros = 0,
   countOtros = 0
 }) {
-  const businessName = config.businessName || 'PlayCenter Aguilares';
+  const businessName = config.businessName || 'El Rey Play';
   const currentDate = new Date().toLocaleDateString('es-AR', {
     weekday: 'long',
     day: 'numeric',
@@ -192,7 +195,7 @@ export function buildCashClosureText({
     year: 'numeric'
   });
 
-  let text = `💰 *PLAYCENTER AGUILARES - CIERRE DE CAJA*\n`;
+  let text = `💰 *${businessName.toUpperCase()} - CIERRE DE CAJA*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `📅 *Período:* ${dateLabel} (${currentDate})\n`;
   text += `🏪 *Local:* ${businessName} (Aguilares, Tucumán)\n`;
@@ -225,7 +228,7 @@ export function buildCashClosureText({
   }
 
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Reporte generado automáticamente desde el Sistema de Gestión PlayCenter._`;
+  text += `_Reporte generado automáticamente desde el Sistema de Gestión ${businessName}._`;
 
   return text;
 }

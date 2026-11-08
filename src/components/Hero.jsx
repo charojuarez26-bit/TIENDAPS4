@@ -28,14 +28,14 @@ export default function Hero({ onScrollToSection, onOpenFullCatalog }) {
         {/* Top badge */}
         <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-ps-surface border border-ps-neon/30 text-[11px] sm:text-sm text-slate-200 mb-4 sm:mb-6 shadow-ps-glow">
           <PlayStationSymbolsRow size="w-3 h-3 sm:w-3.5 sm:h-3.5" spacing="space-x-1" />
-          <span className="text-ps-neon font-semibold tracking-wide">Aguilares, Tucumán</span>
+          <span className="text-ps-neon font-bold tracking-wide">El Rey Play • Aguilares</span>
           <span className="text-slate-500">•</span>
           <span className="text-slate-300">Servicio Especializado PS3 & PS4</span>
         </div>
 
         {/* Main Title */}
         <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight font-gaming">
-          TU TEMPLO GAMER Y TALLER TÉCNICO EN{' '}
+          EL REY PLAY • TU MUNDO GAMER EN{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-ps-blueLight via-ps-neon to-white">
             AGUILARES
           </span>
@@ -43,7 +43,7 @@ export default function Hero({ onScrollToSection, onOpenFullCatalog }) {
 
         {/* Subtitle */}
         <p className="mt-3 sm:mt-5 text-xs sm:text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Consolas garantizadas, los mejores juegos físicos y digitales, mandos DualShock y servicio técnico de alta precisión con limpieza ultrasónica y pasta térmica Arctic MX-4.
+          En <strong className="text-white font-bold">El Rey Play</strong> encontrás consolas garantizadas, los mejores juegos físicos y digitales, mandos DualShock y servicio técnico de alta precisión con limpieza ultrasónica y pasta térmica Arctic MX-4.
         </p>
 
         {/* CTAs */}

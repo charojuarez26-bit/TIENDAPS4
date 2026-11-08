@@ -116,7 +116,7 @@ export default function Footer({ onOpenAdmin, onScrollToSection, onOpenFullCatal
               Escribinos por WhatsApp para cotizaciones, presupuestos o dudas sobre tu pedido.
             </p>
             <a
-              href={`https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent('¡Hola PlayCenter Aguilares! Quiero hacer una consulta.')}`}
+              href={`https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(`¡Hola ${config.businessName || 'El Rey Play'}! Quiero hacer una consulta.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition-all"
