@@ -172,14 +172,14 @@ export default function FullCatalogPage({ onBackToHome, initialCategory = 'all' 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ps-blue/20 border border-ps-neon/40 text-ps-neon text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-3 shadow-ps-glow">
             <Sparkles className="w-3 h-3 animate-spin-slow" />
-            <span>Catálogo Completo • Todo el Stock de Aguilares</span>
+            <span>Catálogo Completo • Todo el Stock Disponible</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold font-gaming tracking-tight text-white max-w-3xl mx-auto">
             CATÁLOGO EXCLUSIVO PLAYSTATION
           </h1>
           <p className="mt-2 sm:mt-3 text-xs sm:text-sm md:text-base text-slate-300 max-w-2xl mx-auto">
-            Colección completa de videojuegos físicos originales para PS4 y PS3, consolas verificadas en banco de trabajo y periféricos oficiales en Aguilares.
+            Colección completa de videojuegos físicos originales para PS4 y PS3, consolas verificadas en banco de trabajo y periféricos oficiales.
           </p>
 
           {/* Quick Highlights Chips */}
@@ -545,7 +545,7 @@ export default function FullCatalogPage({ onBackToHome, initialCategory = 'all' 
               ¡TE LO CONSEGUIMOS A PEDIDO!
             </h3>
             <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
-              Si querés algún título específico de PS4 o PS3 que no esté en la lista, avisanos por WhatsApp y te lo traemos en pocos días al mejor precio de Aguilares.
+              Si querés algún título específico de PS4 o PS3 que no esté en la lista, avisanos por WhatsApp y te lo traemos en pocos días al mejor precio del mercado.
             </p>
           </div>
 

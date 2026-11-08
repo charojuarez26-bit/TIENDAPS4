@@ -155,7 +155,7 @@ export default function RepairTrackerSection() {
                               ¡Tu equipo está LISTO PARA RETIRAR!
                             </h4>
                             <p className="text-xs text-slate-300">
-                              Podés pasar por nuestro local en el centro de Aguilares en los horarios habituales.
+                              Podés pasar por nuestro local en los horarios de atención habituales.
                             </p>
                           </div>
                         </div>

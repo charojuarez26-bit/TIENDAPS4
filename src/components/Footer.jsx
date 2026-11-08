@@ -29,7 +29,7 @@ export default function Footer({ onOpenAdmin, onScrollToSection, onOpenFullCatal
             </div>
 
             <p className="text-slate-400 text-xs leading-relaxed">
-              El punto de encuentro para gamers de Aguilares y el sur de Tucumán. Especialistas en consolas PlayStation 3 y PlayStation 4 con repuestos certificados.
+              El punto de encuentro definitivo para gamers. Especialistas en consolas PlayStation 3 y PlayStation 4 con repuestos certificados.
             </p>
 
             <div className="pt-1">
@@ -86,7 +86,7 @@ export default function Footer({ onOpenAdmin, onScrollToSection, onOpenFullCatal
             </ul>
           </div>
 
-          {/* Local Aguilares info */}
+          {/* Local info */}
           <div className="space-y-3">
             <h4 className="text-white font-gaming text-sm font-bold uppercase tracking-wider">
               Ubicación & Local
@@ -131,11 +131,11 @@ export default function Footer({ onOpenAdmin, onScrollToSection, onOpenFullCatal
         {/* Bottom bar */}
         <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
           <p>
-            © {new Date().getFullYear()} {config.businessName}. Todos los derechos reservados. Aguilares, Tucumán, Argentina.
+            © {new Date().getFullYear()} {config.businessName}. Todos los derechos reservados.
           </p>
 
           <p className="flex items-center gap-1">
-            <span>Desarrollado para la comunidad gamer de Aguilares</span>
+            <span>Desarrollado para la comunidad gamer</span>
           </p>
         </div>
       </div>

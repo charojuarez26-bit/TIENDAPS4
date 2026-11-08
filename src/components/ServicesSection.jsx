@@ -31,7 +31,7 @@ export default function ServicesSection() {
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-14">
           <div className="inline-flex items-center gap-2 mb-2 sm:mb-3">
             <PlayStationSymbolsRow size="w-3.5 h-3.5" />
-            <span className="text-[11px] sm:text-xs uppercase font-bold text-ps-neon tracking-wider">Laboratorio Técnico Aguilares</span>
+            <span className="text-[11px] sm:text-xs uppercase font-bold text-ps-neon tracking-wider">Laboratorio Técnico Especializado</span>
           </div>
 
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-gaming tracking-wide">
@@ -157,7 +157,7 @@ export default function ServicesSection() {
             <div>
               <h4 className="text-sm sm:text-base font-bold text-white">¿Tenés otra falla o consulta técnica?</h4>
               <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
-                Traé tu consola al local en Aguilares para presupuesto sin cargo. También reparamos fuentes, lectores y HDMI.
+                Traé tu consola a nuestro taller para presupuesto sin cargo. También reparamos fuentes, lectores y HDMI.
               </p>
             </div>
           </div>

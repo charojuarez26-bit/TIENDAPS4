@@ -51,13 +51,13 @@ export default function Header({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="font-semibold text-emerald-400">Abierto en Aguilares</span>
+            <span className="font-semibold text-emerald-400">Local Abierto</span>
             <span className="text-slate-400 hidden sm:inline">• {config.address}</span>
           </div>
 
           <div className="flex items-center gap-4">
             <PlayStationSymbolsRow size="w-3 h-3" spacing="space-x-1.5" />
-            <span className="text-[11px] text-slate-400 hidden md:inline">Taller Oficial PlayStation Aguilares</span>
+            <span className="text-[11px] text-slate-400 hidden md:inline">Taller Especializado PlayStation</span>
           </div>
         </div>
       </div>
@@ -87,9 +87,9 @@ export default function Header({
                 </span>
               </div>
               <div className="text-[10px] text-slate-400 tracking-wider flex items-center gap-1 uppercase font-semibold">
-                <span className="text-ps-blueLight font-bold">Aguilares</span>
+                <span className="text-ps-blueLight font-bold">Servicio Técnico</span>
                 <span className="text-slate-600">•</span>
-                <span>Servicio Técnico & Gaming</span>
+                <span>Gaming & Consolas</span>
               </div>
             </div>
           </div>
@@ -245,7 +245,7 @@ export default function Header({
 
           <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-ps-neon" /> Aguilares, Tucumán
+              <MapPin className="w-3.5 h-3.5 text-ps-neon" /> {config.address || 'Atención al Público'}
             </span>
             <span className="text-emerald-400 font-medium">Abierto hoy</span>
           </div>

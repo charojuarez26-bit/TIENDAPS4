@@ -27,13 +27,22 @@ export function AppProvider({ children }) {
       const saved = localStorage.getItem(STORAGE_KEYS.CONFIG);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Automatic migration: If businessName still has old branding, update seamlessly
-        if (!parsed.businessName || parsed.businessName.toLowerCase().includes('playcenter')) {
-          const updated = {
-            ...parsed,
-            businessName: 'El Rey Play',
-            instagram: parsed.instagram?.includes('playcenter') ? '@elreyplay.aguilares' : parsed.instagram
-          };
+        // Automatic migration: If businessName or address still has old branding, update seamlessly
+        let shouldUpdate = false;
+        let updated = { ...parsed };
+        if (!updated.businessName || updated.businessName.toLowerCase().includes('playcenter')) {
+          updated.businessName = 'El Rey Play';
+          shouldUpdate = true;
+        }
+        if (updated.instagram && !updated.instagram.includes('@elreyplay.oficial')) {
+          updated.instagram = '@elreyplay.oficial';
+          shouldUpdate = true;
+        }
+        if (updated.address && updated.address !== 'Centro - Atención al Público' && (updated.address.includes('Tucum') || updated.address.includes('PlayCenter') || updated.address.includes('Aguil'))) {
+          updated.address = 'Centro - Atención al Público';
+          shouldUpdate = true;
+        }
+        if (shouldUpdate) {
           localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(updated));
           return updated;
         }

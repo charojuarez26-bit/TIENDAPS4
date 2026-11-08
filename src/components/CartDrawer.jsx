@@ -20,7 +20,7 @@ export default function CartDrawer() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
-  const [deliveryMethod, setDeliveryMethod] = useState('Retiro por el local en Aguilares');
+  const [deliveryMethod, setDeliveryMethod] = useState('Retiro por el local');
   const [customerAddress, setCustomerAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -34,7 +34,7 @@ export default function CartDrawer() {
     }
 
     if (deliveryMethod.includes('Envío') && !customerAddress.trim()) {
-      setValidationError('Por favor especificá la dirección o barrio de entrega en Aguilares.');
+      setValidationError('Por favor especificá la dirección o barrio de entrega.');
       return;
     }
 
@@ -248,8 +248,8 @@ export default function CartDrawer() {
                     </label>
                     <div className="grid grid-cols-1 gap-2">
                       {[
-                        { id: 'Retiro por el local en Aguilares', label: '🏪 Retiro en Local (Aguilares)' },
-                        { id: 'Envío a domicilio en Aguilares', label: '🛵 Envío a Domicilio (Aguilares y zonas)' },
+                        { id: 'Retiro por el local', label: '🏪 Retiro en Local' },
+                        { id: 'Envío a domicilio', label: '🛵 Envío a Domicilio' },
                       ].map((m) => (
                         <button
                           key={m.id}
@@ -271,11 +271,11 @@ export default function CartDrawer() {
                   {deliveryMethod.includes('Envío') && (
                     <div className="animate-fadeIn">
                       <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Dirección exacta o barrio en Aguilares *
+                        Dirección exacta o barrio de entrega *
                       </label>
                       <input
                         type="text"
-                        placeholder="Ej: Barrio San Martín Mz C Lote 4"
+                        placeholder="Ej: Calle Principal 123"
                         value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-ps-bg border border-ps-border focus:border-ps-neon text-xs text-white placeholder:text-slate-500 focus:outline-none"
@@ -343,7 +343,7 @@ export default function CartDrawer() {
               </button>
 
               <p className="text-[10px] text-center text-slate-400 mt-2">
-                Te responderemos al instante desde nuestro local en Aguilares para coordinar.
+                Te responderemos al instante desde nuestro local para coordinar la entrega o retiro.
               </p>
             </div>
           )}

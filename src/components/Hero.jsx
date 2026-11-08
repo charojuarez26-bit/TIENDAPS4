@@ -28,16 +28,16 @@ export default function Hero({ onScrollToSection, onOpenFullCatalog }) {
         {/* Top badge */}
         <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-ps-surface border border-ps-neon/30 text-[11px] sm:text-sm text-slate-200 mb-4 sm:mb-6 shadow-ps-glow">
           <PlayStationSymbolsRow size="w-3 h-3 sm:w-3.5 sm:h-3.5" spacing="space-x-1" />
-          <span className="text-ps-neon font-bold tracking-wide">El Rey Play • Aguilares</span>
+          <span className="text-ps-neon font-bold tracking-wide">El Rey Play</span>
           <span className="text-slate-500">•</span>
           <span className="text-slate-300">Servicio Especializado PS3 & PS4</span>
         </div>
 
         {/* Main Title */}
         <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight font-gaming">
-          EL REY PLAY • TU MUNDO GAMER EN{' '}
+          EL REY PLAY • TU MUNDO GAMER Y TALLER{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-ps-blueLight via-ps-neon to-white">
-            AGUILARES
+            ESPECIALIZADO
           </span>
         </h1>
 

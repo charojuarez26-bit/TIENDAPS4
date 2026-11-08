@@ -153,7 +153,7 @@ export default function CatalogSection({ onOpenFullCatalog }) {
             </h2>
             <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
               {isGameCategory 
-                ? 'Estuches Blu-ray originales con discos testeados en taller de Aguilares. ¡Precios de folleto retail!'
+                ? 'Estuches Blu-ray originales con discos testeados en taller especializado. ¡Precios de folleto retail!'
                 : 'Consolas con mantenimiento preventivo, joysticks testeados y garantía escrita de 90 días.'
               }
             </p>

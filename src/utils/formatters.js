@@ -77,7 +77,7 @@ export const REPAIR_STATUS_CONFIG = {
     borderColor: 'border-emerald-500/50',
     barColor: 'bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]',
     icon: 'CheckCircle2',
-    description: 'Trabajo terminado y testeado al 100%. Podes pasar a retirarlo por el local en Aguilares.'
+    description: 'Trabajo terminado y testeado al 100%. Podés pasar a retirarlo por nuestro local.'
   },
   'Entregado': {
     label: 'Entregado',
@@ -101,7 +101,7 @@ export function buildReadyWhatsAppUrl(repair, businessName) {
   const phone = cleanPhone(repair.phone);
   const formattedCost = formatARS(repair.cost);
   const nameToUse = businessName || 'El Rey Play';
-  const message = `¡Hola ${repair.clientName}! Te escribimos de ${nameToUse}. Te avisamos que tu ${repair.device} (Orden #${repair.id}) ya está LISTO PARA RETIRAR por nuestro local en Aguilares. Total: ${formattedCost}. ¡Te esperamos!`;
+  const message = `¡Hola ${repair.clientName}! Te escribimos de ${nameToUse}. Te avisamos que tu ${repair.device} (Orden #${repair.id}) ya está LISTO PARA RETIRAR por nuestro local. Total: ${formattedCost}. ¡Te esperamos!`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
@@ -146,7 +146,7 @@ export function buildCartCheckoutWhatsAppUrl(cart, customerData, config) {
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `💰 *TOTAL A ABONAR: ${formatARS(total)}*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  text += `_Pedido generado desde la tienda web oficial de ${nameToUse} (Aguilares, Tucumán)._`;
+  text += `_Pedido generado desde la tienda web oficial de ${nameToUse}._`;
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
@@ -198,7 +198,7 @@ export function buildCashClosureText({
   let text = `💰 *${businessName.toUpperCase()} - CIERRE DE CAJA*\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `📅 *Período:* ${dateLabel} (${currentDate})\n`;
-  text += `🏪 *Local:* ${businessName} (Aguilares, Tucumán)\n`;
+  text += `🏪 *Local:* ${businessName}${config.address ? ` (${config.address})` : ''}\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━\n`;
   text += `💵 *TOTAL EFECTIVO (Caja Física):* ${formatARS(totalEfectivo)}\n`;
   text += `📱 *TOTAL TRANSFERENCIAS (MP / Banco):* ${formatARS(totalTransferencia)}\n`;
